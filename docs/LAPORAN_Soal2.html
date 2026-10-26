@@ -49,6 +49,17 @@ li{margin:3px 0}
 em{color:var(--muted)}
 strong{color:#0f172a}
 .pagebreak{page-break-before:always}
+div[align="center"]{text-align:center; margin:6px 0 10px}
+div[align="center"] code{
+  background:var(--code); border:1px solid var(--border); border-radius:6px;
+  padding:6px 10px; display:inline-block; font-size:8.6pt; color:#334155;
+  word-break:break-all; max-width:100%;
+}
+a.btn-colab{display:inline-block; text-decoration:none; border-radius:10px;
+  padding:4px; transition:transform .12s ease, box-shadow .12s ease}
+a.btn-colab:hover{transform:translateY(-1px);
+  box-shadow:0 6px 16px rgba(37,99,235,.28)}
+a.btn-colab img{display:block; margin:0}
 @media print{
   body{padding:0; max-width:none; font-size:10.5pt}
   h2{page-break-before:auto}
@@ -68,6 +79,20 @@ strong{color:#0f172a}
         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 <body>
+<div align="center">
+
+<a class="btn-colab" href="https://colab.research.google.com/github/zahran-rzq/DSEC_ets_object_detection/blob/arena/e1293095-dsec-ets-object-detection/DSEC_Security_Camera_ETS.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" height="46"></a>
+
+**▶ Open in Colab** — notebook pendukung laporan ini dapat dijalankan langsung di Google Colab.
+
+
+<pre><code>https://colab.research.google.com/github/zahran-rzq/DSEC_ets_object_detection/blob/arena/e1293095-dsec-ets-object-detection/DSEC_Security_Camera_ETS.ipynb
+</code></pre>
+
+
+</div>
+
+<hr />
 <h1 id="laporan-rancangan-sistem">LAPORAN RANCANGAN SISTEM</h1>
 <h2 id="aplikasi-desktop-kamera-keamanan-berbasis-deep-learning">Aplikasi Desktop Kamera Keamanan Berbasis Deep Learning</h2>
 <h3 id="deteksi-real-time-person-car-truck-motorbike-dengan-auto-snapshot-auto-recording">Deteksi Real-Time <code>person</code> · <code>car</code> · <code>truck</code> · <code>motorbike</code> dengan Auto-Snapshot &amp; Auto-Recording</h3>
@@ -1466,8 +1491,14 @@ matplotlib, pandas       (notebook)
 </code></pre>
 <p>Opsional: GPU NVIDIA + CUDA (disarankan; CPU tetap bisa, ~3–6 FPS).</p>
 <h3 id="73-menjalankan-di-google-colab-untuk-ets">7.3 Menjalankan di Google Colab (untuk ETS)</h3>
+<div align="center">
+
+<a class="btn-colab" href="https://colab.research.google.com/github/zahran-rzq/DSEC_ets_object_detection/blob/arena/e1293095-dsec-ets-object-detection/DSEC_Security_Camera_ETS.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" height="46"></a>
+
+</div>
+
 <ol>
-<li>Buka <code>DSEC_Security_Camera_ETS.ipynb</code> di Colab.</li>
+<li>Klik tombol <strong>▶ Open in Colab</strong> di atas untuk membuka <code>DSEC_Security_Camera_ETS.ipynb</code> di Colab.</li>
 <li><code>Runtime → Change runtime type → T4 GPU</code>.</li>
 <li><code>Runtime → Run all</code>.</li>
 <li>Bagian 5 menjalankan <strong>demo webcam <em>live</em> langsung di browser</strong> — tidak<br />

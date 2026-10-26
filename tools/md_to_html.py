@@ -60,6 +60,17 @@ li{margin:3px 0}
 em{color:var(--muted)}
 strong{color:#0f172a}
 .pagebreak{page-break-before:always}
+div[align="center"]{text-align:center; margin:6px 0 10px}
+div[align="center"] code{
+  background:var(--code); border:1px solid var(--border); border-radius:6px;
+  padding:6px 10px; display:inline-block; font-size:8.6pt; color:#334155;
+  word-break:break-all; max-width:100%;
+}
+a.btn-colab{display:inline-block; text-decoration:none; border-radius:10px;
+  padding:4px; transition:transform .12s ease, box-shadow .12s ease}
+a.btn-colab:hover{transform:translateY(-1px);
+  box-shadow:0 6px 16px rgba(37,99,235,.28)}
+a.btn-colab img{display:block; margin:0}
 @media print{
   body{padding:0; max-width:none; font-size:10.5pt}
   h2{page-break-before:auto}

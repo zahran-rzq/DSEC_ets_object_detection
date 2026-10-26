@@ -1,4 +1,12 @@
+<div align="center">
+
+<a href="https://colab.research.google.com/github/zahran-rzq/DSEC_ets_object_detection/blob/arena/e1293095-dsec-ets-object-detection/DSEC_Security_Camera_ETS.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" height="52"></a>
+
 # 🛡️ SecureVision — DSEC ETS · *Security Camera Application*
+
+**Klik tombol ▶ Open in Colab di atas untuk langsung menjalankan notebook-nya.**
+
+</div>
 
 Aplikasi desktop kamera keamanan berbasis *deep learning* dengan model
 **YOLO pre-trained** yang mendeteksi **person · car · truck · motorbike**
@@ -20,8 +28,17 @@ ketika kelas tersebut terdeteksi.
 | **Mau lihat mockup antarmuka** | [`mockup/ui_mockup_light.png`](mockup/ui_mockup_light.png) | — |
 
 ### Colab — urutan tercepat saat ujian
-1. Buka notebook di atas dengan Google Colab.
-2. `Runtime → Change runtime type → **T4 GPU** → Save`.
+1. Klik tombol **▶ Open in Colab** di paling atas halaman ini
+   *(atau salin tautan berikut bila tombol tidak muncul):*
+
+   ```
+   https://colab.research.google.com/github/zahran-rzq/DSEC_ets_object_detection/blob/arena/e1293095-dsec-ets-object-detection/DSEC_Security_Camera_ETS.ipynb
+   ```
+
+   Cara kedua: buka <https://colab.research.google.com> → **File → Open notebook
+   → tab GitHub** → ketik `zahran-rzq/DSEC_ets_object_detection` → pilih
+   `DSEC_Security_Camera_ETS.ipynb`.
+2. Setelah terbuka di Colab, pilih `Runtime → Change runtime type → **T4 GPU** → Save`.
 3. `Runtime → Run all`.
 4. **Bagian 5** = demo webcam *live* langsung dari browser (tanpa instal apa pun).
 5. **Bagian 6** = unduh `best.pt` + arsip hasil.

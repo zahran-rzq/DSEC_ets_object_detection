@@ -28,6 +28,17 @@ def code(src: str) -> None:
 
 # ===========================================================================
 md(r"""
+<div align="center">
+
+<a href="https://colab.research.google.com/github/zahran-rzq/DSEC_ets_object_detection/blob/arena/e1293095-dsec-ets-object-detection/DSEC_Security_Camera_ETS.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" height="46"></a>
+
+**Klik tombol di atas untuk membuka notebook ini di Google Colab**
+*(atau langsung: **File → Open notebook → tab GitHub → `zahran-rzq/DSEC_ets_object_detection`**)*
+
+</div>
+
+---
+
 # 🛡️ SecureVision — Aplikasi Kamera Keamanan Berbasis Deep Learning
 ### Deteksi Real-Time: **person · car · truck · motorbike** + Auto-Snapshot & Auto-Recording
 **Mata kuliah:** Deep Learning for Security (DSEC) · **Soal 2 — ETS**
@@ -1198,6 +1209,12 @@ print("\nTersimpan:", out_json)
 # ---------------------------------------------------------------------------
 md(r"""
 ---
+<div align="center">
+
+<a href="https://colab.research.google.com/github/zahran-rzq/DSEC_ets_object_detection/blob/arena/e1293095-dsec-ets-object-detection/DSEC_Security_Camera_ETS.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" height="46"></a>
+
+</div>
+
 # 7) Cheat-Sheet Jawaban Lisan + Troubleshooting
 
 ## 🎤 Ringkasan 60 detik untuk presentasi / tanya-jawab
