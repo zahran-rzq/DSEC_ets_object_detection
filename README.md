@@ -182,4 +182,47 @@ runs/capture/
 
 ---
 
+## 📄 Laporan (format PDF untuk MyITS Classroom)
+
+Berkas utama: **`docs/LAPORAN_Soal2.pdf`** — 35 halaman, 12 gambar
+(7 diagram + 1 mockup UI + 4 tangkapan layar hasil deteksi).
+
+Isi laporan: sampul + tabel identitas, daftar isi, daftar gambar, daftar tabel,
+11 bab (pendahuluan → lampiran) dan daftar pustaka.
+
+### Membangun ulang PDF dari Markdown
+
+```bash
+pip install reportlab matplotlib pillow     # satu kali
+python tools/md_to_pdf.py docs/LAPORAN_Soal2.md
+# -> docs/LAPORAN_Soal2.pdf
+```
+
+Konverter `tools/md_to_pdf.py` menangani: sampul otomatis, daftar isi / daftar
+gambar / daftar tabel bernomor halaman, header–footer, tabel bergaris, blok kode,
+kutipan, dan **rumus LaTeX** ($...$ dan $$...$$) yang dirender dengan *mathtext*
+matplotlib sehingga tampil rapi di PDF.
+
+### Mengganti identitas di sampul
+
+Sunting tabel identitas pada **10 baris pertama** `docs/LAPORAN_Soal2.md`
+(Nama, NRP, Kelas, Dosen), lalu bangun ulang PDF-nya.
+
+### Mengganti / menambah gambar
+
+```bash
+python tools/make_figures.py     # 7 diagram (arsitektur, alur kerja, state, dst.)
+```
+
+Letakkan berkas di `docs/gambar/` lalu rujuk dari Markdown:
+
+```markdown
+![Gambar 13 — Keterangan singkat](gambar/nama_berkas.png)
+```
+
+Penomoran gambar dan daftar gambar akan diperbarui otomatis.
+
+
+---
+
 *Dibuat untuk ETS mata kuliah Deep Learning for Security (DSEC).*
