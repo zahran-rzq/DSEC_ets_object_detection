@@ -165,6 +165,9 @@ class CameraConfig:
     width: int = 1280
     height: int = 720
     fps: int = 30
+    # Backend OpenCV: "auto" | "DSHOW" | "MSMF" | "V4L2" | "AVFOUNDATION" | "ANY"
+    # Windows yang bermasalah (LED menyala tapi layar gelap) -> coba "DSHOW".
+    backend: str = "auto"
     # Jalankan inferensi setiap N frame (1 = tiap frame). Naikkan kalau CPU lambat.
     frame_skip: int = 1
     flip_horizontal: bool = False

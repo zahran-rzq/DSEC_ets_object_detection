@@ -67,6 +67,7 @@ DSEC_ets_object_detection/
 │       ├── detector.py              wrapper YOLO, filter kelas/conf/ROI, anotasi
 │       ├── recorder.py              ring buffer pre-roll, penulis MP4/JPG/CSV
 │       ├── pipeline.py              state machine pemicu rekaman
+│       ├── camera.py                pembuka kamera tangguh (backend probe + watchdog)
 │       └── metrics.py               IoU, Precision, Recall, AP, mAP (dari nol)
 ├── tests/test_pipeline.py           self-test logika tanpa model & tanpa kamera
 ├── tools/
@@ -89,6 +90,7 @@ python -m src.app                         # GUI tema terang, webcam 0
 python -m src.app --source 1              # webcam kedua
 python -m src.app --weights best.pt       # bobot hasil fine-tuning
 python -m src.app --preset max_recall     # prioritas recall (anti penyusup lolos)
+python -m src.app --backend DSHOW         # Windows: paksa backend DirectShow
 
 python -m src.headless --source 0         # tanpa GUI
 python -m src.headless --source video.mp4 # proses berkas video
@@ -96,6 +98,36 @@ python -m src.headless --source foto.jpg --save-frame
 
 python -m tests.test_pipeline             # 19 pengujian logika, tanpa model
 ```
+
+### 🔧 Troubleshooting: "Lampu kamera menyala, tapi tidak muncul di UI"
+
+Gejala ini berarti kamera **terbuka** oleh OpenCV, tetapi tidak ada *frame* yang
+masuk. Penyebabnya hampir selalu salah satu dari berikut:
+
+| # | Penyebab | Solusi |
+|---|---|---|
+| 1 | Aplikasi lain memegang kamera (Zoom / Teams / Meet / browser / OBS) | **Tutup** aplikasi itu, lalu klik **Tes** |
+| 2 | Backend OpenCV tidak cocok (umum di Windows: MSMF) | Klik **Tes** — aplikasi otomatis mencoba `DSHOW → MSMF → ANY`. Atau paksa: `python -m src.app --backend DSHOW` |
+| 3 | Izin kamera untuk *desktop apps* nonaktif (Windows) | `Settings → Privacy & security → Camera` → nyalakan **Camera access**, **Let apps access your camera**, dan **Let desktop apps access your camera** |
+| 4 | Resolusi 1280×720 tidak didukung | Turunkan: edit `cfg.camera.width/height` atau pakai preset `fast` (`--preset fast` → 640×480) |
+| 5 | Salah indeks kamera (mis. kamera virtual OBS/DroidCam di indeks 0) | Klik **Tes** untuk melihat indeks yang benar, lalu pilih di dropdown **Sumber kamera** |
+| 6 | Terpasang `opencv-python-headless` | `pip uninstall opencv-python-headless && pip install opencv-python` |
+
+**Pemindaian kamera dari terminal:**
+
+```bash
+python -m src.core.camera          # atau: python -m src.headless --list-cameras
+```
+
+Aplikasi sekarang juga otomatis:
+* mencoba beberapa backend dan hanya menerima kamera yang **benar-benar
+  mengirim frame** (bukan sekadar `isOpened() == True`),
+* menampilkan peringatan **"KAMERA TIDAK MENGIRIM FRAME — mencoba menyambung
+  ulang..."** dan menyambung ulang otomatis,
+* memberi tahu bila frame tampak **hitam** (lensa tertutup / dipakai aplikasi lain),
+* memuat model & membuka kamera **di thread terpisah** sehingga GUI tidak beku.
+
+---
 
 Semua hasil tersimpan di `runs/capture/`:
 

@@ -37,6 +37,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.core.config import (  # noqa: E402
     AppConfig, CLASS_COLORS_HEX, COCO_CLASS_IDS, preset)
 from src.core.pipeline import State, SurveillancePipeline  # noqa: E402
+from src.core.camera import CameraThread, probe_cameras   # noqa: E402
 
 try:
     import cv2
@@ -72,65 +73,6 @@ PALETTE = {
 
 
 # ==========================================================================
-class CameraThread(threading.Thread):
-    """Membaca frame dari kamera/video di background thread."""
-
-    def __init__(self, source, width, height, fps, flip=False):
-        super().__init__(daemon=True)
-        self.source = source
-        self.width, self.height, self.fps = width, height, fps
-        self.flip = flip
-        self.cap = None
-        self.frame_queue: "queue.Queue[np.ndarray]" = queue.Queue(maxsize=2)
-        self.running = threading.Event()
-        self.error: Optional[str] = None
-        self.actual_size = (width, height)
-        self.actual_fps = float(fps)
-
-    def open(self) -> bool:
-        src = int(self.source) if str(self.source).isdigit() else str(self.source)
-        self.cap = cv2.VideoCapture(src)
-        if not self.cap.isOpened():
-            self.error = f"Tidak bisa membuka sumber: {self.source}"
-            return False
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
-        self.cap.set(cv2.CAP_PROP_FPS, self.fps)
-        w = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH) or self.width)
-        h = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or self.height)
-        f = self.cap.get(cv2.CAP_PROP_FPS) or self.fps
-        self.actual_size = (w, h)
-        self.actual_fps = float(f) if f and f > 0 else float(self.fps)
-        return True
-
-    def run(self) -> None:
-        while self.running.is_set() and self.cap and self.cap.isOpened():
-            ok, frame = self.cap.read()
-            if not ok:
-                time.sleep(0.01)
-                continue
-            if self.flip:
-                frame = cv2.flip(frame, 1)
-            if self.frame_queue.full():
-                try:
-                    self.frame_queue.get_nowait()
-                except queue.Empty:
-                    pass
-            self.frame_queue.put(frame)
-
-    def read(self) -> Optional[np.ndarray]:
-        try:
-            return self.frame_queue.get_nowait()
-        except queue.Empty:
-            return None
-
-    def stop(self) -> None:
-        self.running.clear()
-        if self.cap:
-            self.cap.release()
-
-
-# ==========================================================================
 class App(ctk.CTk):
     """Jendela utama aplikasi."""
 
@@ -152,6 +94,9 @@ class App(ctk.CTk):
         self.pipeline: Optional[SurveillancePipeline] = None
         self.camera: Optional[CameraThread] = None
         self.running = False
+        self._start_job: Optional[dict] = None     # hasil buka kamera (dari thread)
+        self._probe_pending = None                 # hasil pemindaian kamera
+        self._probe_running = False
         self._last_frame: Optional[np.ndarray] = None
         self._rec_start = 0.0
         self._cls_vars: Dict[str, ctk.BooleanVar] = {}
@@ -250,10 +195,30 @@ class App(ctk.CTk):
         ctk.CTkLabel(c1, text="STATUS SISTEM",
                      font=ctk.CTkFont("Segoe UI", 12, "bold"),
                      text_color=PALETTE["text_muted"]).pack(anchor="w", padx=14, pady=(12, 6))
+
+        # --- pemilih sumber kamera ---
+        sel = ctk.CTkFrame(c1, fg_color="transparent")
+        sel.pack(fill="x", padx=14, pady=(0, 8))
+        ctk.CTkLabel(sel, text="Sumber kamera", font=ctk.CTkFont("Segoe UI", 12),
+                     text_color=PALETTE["text_muted"]).pack(side="left")
+        self.cam_var = ctk.StringVar(value=str(self.cfg.camera.source))
+        self.cam_menu = ctk.CTkOptionMenu(
+            sel, values=["0", "1", "2", "3", "4"], variable=self.cam_var,
+            width=72, font=ctk.CTkFont("Segoe UI", 12),
+            command=self._on_camera_change)
+        self.cam_menu.pack(side="right")
+        self.btn_probe = ctk.CTkButton(
+            sel, text="Tes", width=52, height=26,
+            font=ctk.CTkFont("Segoe UI", 11),
+            fg_color="#E2E8F0", text_color=PALETTE["text"], hover_color="#CBD5E1",
+            command=self.probe_camera)
+        self.btn_probe.pack(side="right", padx=(0, 6))
+
         self.info = {}
         for key, val in [("Model", Path(self.cfg.model.weights).name),
                          ("Kelas aktif", ", ".join(self.cfg.model.names)),
-                         ("Resolusi", f"{self.cfg.camera.width}×{self.cfg.camera.height}"),
+                         ("Resolusi", "-"),
+                         ("Backend", "-"),
                          ("FPS", "0.0"), ("Inferensi", "0 ms"),
                          ("Total event", "0")]:
             row = ctk.CTkFrame(c1, fg_color="transparent")
@@ -450,52 +415,123 @@ class App(ctk.CTk):
     def toggle_camera(self):
         if self.running:
             self.stop_camera()
-        else:
+        elif not self._start_job:
             self.start_camera()
 
+    def _on_camera_change(self, value):
+        """Ganti sumber kamera; mulai ulang bila sedang berjalan."""
+        self.cfg.camera.source = str(value)
+        was_running = self.running
+        if was_running:
+            self.stop_camera()
+        self._log(f"🎥 Sumber kamera: {value}")
+        if was_running:
+            self.after(300, self.start_camera)
+
+    def probe_camera(self):
+        """Pindai indeks kamera 0-4 dan laporkan yang benar-benar mengirim frame."""
+        if self._probe_running:
+            return
+        self._probe_running = True
+        self.btn_probe.configure(state="disabled", text="...")
+        self._log("🔍 Memindai kamera 0-4 ...")
+
+        def job():
+            try:
+                res = probe_cameras(max_index=5)
+            except Exception as e:
+                self._log(f"❌ Pemindaian gagal: {e}")
+                res = []
+            self._probe_pending = res
+
+        threading.Thread(target=job, daemon=True).start()
+
+    def _apply_probe(self, res: list):
+        """Terapkan hasil pemindaian (dipanggil dari main thread)."""
+        self._probe_running = False
+        self.btn_probe.configure(state="normal", text="Tes")
+        if not res:
+            self._log("❌ Tidak ada kamera yang mengirim frame.")
+            self._log("   → Tutup Zoom/Teams/Meet, cek izin kamera, lalu tes ulang.")
+            self.status_text.configure(
+                text="Kamera tidak mengirim frame — cek aplikasi lain / izin kamera",
+                text_color=PALETTE["danger"])
+            return
+        vals = [str(f["index"]) for f in res]
+        self.cam_menu.configure(values=vals)
+        for f in res:
+            self._log(f"✅ kamera {f['index']}: {f['backend']} "
+                      f"{f['width']}×{f['height']} @ {f['fps']:.0f} fps")
+        self.cam_var.set(vals[0])
+        self.cfg.camera.source = vals[0]
+        self._log(f"➡ Kamera {vals[0]} dipilih. Klik 'Start Camera'.")
+
     def start_camera(self):
-        if self.running:
+        """Muat model + buka kamera di thread terpisah agar GUI tidak beku."""
+        if self.running or self._start_job:
             return
-        try:
-            if self.pipeline is None:
-                self.pipeline = SurveillancePipeline(
-                    self.cfg, on_event=self._on_pipeline_event)
-        except Exception as e:
-            self._log(f"❌ Gagal memuat model: {e}")
-            self.status_text.configure(text=f"Gagal memuat model: {e}",
+        self._start_job = {"state": "running"}
+        self.btn_start.configure(state="disabled", text="⏳  Membuka ...")
+        self.status_text.configure(text="Memuat model & membuka kamera ...",
+                                   text_color=PALETTE["warn"])
+
+        def job():
+            try:
+                if self.pipeline is None:
+                    self.pipeline = SurveillancePipeline(
+                        self.cfg, on_event=self._on_pipeline_event)
+            except Exception as e:
+                self._start_job = {"state": "error",
+                                   "msg": f"Gagal memuat model/bobot: {e}"}
+                return
+            cam = CameraThread(
+                self.cfg.camera.source, self.cfg.camera.width,
+                self.cfg.camera.height, self.cfg.camera.fps,
+                backend=getattr(self.cfg.camera, "backend", "auto"),
+                flip=self.cfg.camera.flip_horizontal)
+            if not cam.open():
+                self._start_job = {"state": "error",
+                                   "msg": cam.status.error or "Kamera gagal dibuka."}
+                return
+            self._start_job = {"state": "ok", "cam": cam, "status": cam.status}
+
+        threading.Thread(target=job, daemon=True).start()
+
+    def _finish_start(self, job: dict):
+        self.btn_start.configure(state="normal")
+        if job["state"] == "error":
+            msg = job["msg"]
+            self.btn_start.configure(text="▶  Start Camera",
+                                     fg_color=PALETTE["accent"],
+                                     hover_color="#1D4ED8")
+            self._log("❌ " + msg.replace("\n", " "))
+            self.status_text.configure(text=msg.splitlines()[0],
                                        text_color=PALETTE["danger"])
             return
-
-        self.camera = CameraThread(self.cfg.camera.source, self.cfg.camera.width,
-                                   self.cfg.camera.height, self.cfg.camera.fps,
-                                   self.cfg.camera.flip_horizontal)
-        if not self.camera.open():
-            self._log(f"❌ {self.camera.error}")
-            self.status_text.configure(text=self.camera.error or "Kamera gagal dibuka",
-                                       text_color=PALETTE["danger"])
-            self.camera = None
-            return
-
+        cam, st = job["cam"], job["status"]
+        self.camera = cam
         self.running = True
-        self.camera.running.set()
-        self.camera.start()
+        cam.running.set()
+        cam.start()
         self.btn_start.configure(text="■  Stop Camera", fg_color=PALETTE["danger"],
                                  hover_color="#B91C1C")
         self.btn_snap.configure(state="normal")
         self.live_badge.configure(text="● LIVE", text_color=PALETTE["ok"])
-        self.info["Resolusi"].configure(
-            text=f"{self.camera.actual_size[0]}×{self.camera.actual_size[1]}")
-        self._log("▶ Kamera dijalankan")
+        self.info["Resolusi"].configure(text=f"{st.width}×{st.height}")
+        self.info["Backend"].configure(text=f"{st.backend} · {st.fps:.0f} fps")
+        self._log(f"▶ Kamera {self.cfg.camera.source} aktif via {st.backend} "
+                  f"({st.width}×{st.height})")
 
     def stop_camera(self):
         self.running = False
+        self._start_job = None
         if self.camera:
             self.camera.stop()
             self.camera = None
         if self.pipeline:
             self.pipeline.close()
-        self.btn_start.configure(text="▶  Start Camera", fg_color=PALETTE["accent"],
-                                 hover_color="#1D4ED8")
+        self.btn_start.configure(state="normal", text="▶  Start Camera",
+                                 fg_color=PALETTE["accent"], hover_color="#1D4ED8")
         self.btn_snap.configure(state="disabled")
         self.live_badge.configure(text="● OFFLINE", text_color=PALETTE["idle"])
         self.status_text.configure(text="STANDBY — kamera dihentikan",
@@ -533,6 +569,17 @@ class App(ctk.CTk):
         """Dipanggil tiap ~60 ms dari main thread Tk."""
         self.clock_lbl.configure(text=datetime.now().strftime("%H:%M:%S"))
 
+        # hasil pemindaian kamera (dikerjakan di thread -> diterapkan di sini)
+        if self._probe_pending is not None:
+            res, self._probe_pending = self._probe_pending, None
+            self._apply_probe(res)
+
+        # hasil buka kamera (model + backend probing berjalan di thread)
+        job = self._start_job
+        if job and job.get("state") != "running":
+            self._start_job = None
+            self._finish_start(job)
+
         if self.running and self.camera and self.pipeline:
             frame = self.camera.read()
             if frame is not None:
@@ -543,6 +590,15 @@ class App(ctk.CTk):
                     self._update_status(out)
                 except Exception as e:
                     self._log(f"⚠ {e}")
+            elif self.camera.status.stale:
+                # kamera terbuka (LED menyala) tapi tidak mengirim frame
+                self.status_text.configure(
+                    text="KAMERA TIDAK MENGIRIM FRAME — mencoba menyambung ulang...",
+                    text_color=PALETTE["danger"])
+            if (self.camera and self.camera.status.frames == 30
+                    and 0 <= self.camera.status.mean_brightness < 6):
+                self._log("⚠️ Frame tampak hitam — lensa tertutup, atau kamera "
+                          "sedang dipakai aplikasi lain (Zoom/Teams/Meet).")
 
         # kedipan indikator REC
         self._blink = not self._blink

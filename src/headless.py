@@ -28,19 +28,24 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.core.config import preset                       # noqa: E402
 from src.core.detector import SecurityDetector           # noqa: E402
 from src.core.pipeline import State, SurveillancePipeline  # noqa: E402
+from src.core.camera import CameraThread, probe_cameras    # noqa: E402
 
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 
 
-def open_source(source: str, width: int, height: int, fps: int):
-    src = int(source) if str(source).isdigit() else source
-    cap = cv2.VideoCapture(src)
-    if not cap.isOpened():
-        raise SystemExit(f"❌ Tidak bisa membuka sumber: {source}")
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-    cap.set(cv2.CAP_PROP_FPS, fps)
-    return cap
+def open_source(source: str, width: int, height: int, fps: int,
+                backend: str = "auto"):
+    """
+    Buka sumber video dengan backend probing + warm-up.
+    Kamera hanya dianggap berhasil bila benar-benar mengirim frame.
+    """
+    cam = CameraThread(source, width, height, fps, backend=backend)
+    if not cam.open():
+        raise SystemExit("\n❌ " + (cam.status.error or f"Tidak bisa membuka {source}")
+                         + "\n   Coba: python -m src.core.camera   (pemindaian kamera)")
+    cam.running.set()
+    cam.start()
+    return cam
 
 
 def run_on_image(path: str, cfg, save: bool):
@@ -77,12 +82,21 @@ def main():
     ap.add_argument("--preset", default="balanced",
                     choices=["balanced", "max_recall", "low_false_alarm", "fast"])
     ap.add_argument("--device", default="")
+    ap.add_argument("--backend", default="auto",
+                    help="auto | DSHOW | MSMF | V4L2 | AVFOUNDATION | ANY "
+                         "(Windows bermasalah -> coba DSHOW)")
+    ap.add_argument("--list-cameras", action="store_true",
+                    help="pindai kamera yang tersedia lalu keluar")
     ap.add_argument("--no-display", action="store_true")
     ap.add_argument("--save-frame", action="store_true", help="(mode gambar) simpan hasil")
     ap.add_argument("--max-frames", type=int, default=0, help="0 = tanpa batas")
     ap.add_argument("--mock", action="store_true",
                     help="pakai detector palsu (uji logika tanpa model)")
     args = ap.parse_args()
+
+    if args.list_cameras:
+        from src.core.camera import main as scan_cameras
+        raise SystemExit(scan_cameras())
 
     cfg = preset(args.preset)
     cfg.model.weights = args.weights
@@ -103,20 +117,30 @@ def main():
 
     pipe = SurveillancePipeline(cfg, detector=detector,
                                 on_event=lambda e, d: print(f"  [{e}] {d}"))
-    cap = open_source(args.source, cfg.camera.width, cfg.camera.height, cfg.camera.fps)
-    fps_src = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    cam = open_source(args.source, cfg.camera.width, cfg.camera.height,
+                      cfg.camera.fps, backend=args.backend)
+    fps_src = cam.status.fps or 30.0
     cfg.recording.video_fps = float(fps_src)
 
     print(f"Menjalankan pipeline pada '{args.source}' "
-          f"({int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))}x{int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))}"
-          f" @ {fps_src:.1f} fps). Tekan Q untuk berhenti.")
+          f"({cam.status.width}x{cam.status.height} @ {fps_src:.1f} fps, "
+          f"backend {cam.status.backend}). Tekan Q untuk berhenti.")
     idx = 0
+    misses = 0
     t0 = time.time()
     try:
         while True:
-            ok, frame = cap.read()
-            if not ok:
-                break
+            frame = cam.read_blocking(timeout=1.0)
+            if frame is None:
+                misses += 1
+                if not cam.auto_reopen:
+                    print("✅ Sumber video selesai.")
+                    break
+                if not cam.status.opened or misses > 30:
+                    print("⚠️  Kamera berhenti mengirim frame.")
+                    break
+                continue
+            misses = 0
             idx += 1
             out = pipe.process(frame, draw=True)
             if out["event_started"]:
@@ -124,16 +148,24 @@ def main():
             if out["event_stopped"] and out["clip"]:
                 print(f"⏹  REC selesai  -> {out['clip']}")
             if not args.no_display:
-                cv2.imshow("SecureVision (headless)", out["frame"])
-                if cv2.waitKey(1) & 0xFF in (ord("q"), 27):
-                    break
+                try:
+                    cv2.imshow("SecureVision (headless)", out["frame"])
+                    if cv2.waitKey(1) & 0xFF in (ord("q"), 27):
+                        break
+                except cv2.error:
+                    print("⚠️  Tampilan tidak tersedia (opencv-headless) "
+                          "-> lanjut tanpa jendela.")
+                    args.no_display = True
             if args.max_frames and idx >= args.max_frames:
                 break
     except KeyboardInterrupt:
         pass
     finally:
-        cap.release()
-        cv2.destroyAllWindows()
+        cam.stop()
+        try:
+            cv2.destroyAllWindows()
+        except cv2.error:
+            pass
         pipe.close()
         dt = time.time() - t0
         s = pipe.stats
