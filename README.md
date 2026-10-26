@@ -113,11 +113,26 @@ masuk. Penyebabnya hampir selalu salah satu dari berikut:
 | 5 | Salah indeks kamera (mis. kamera virtual OBS/DroidCam di indeks 0) | Klik **Tes** untuk melihat indeks yang benar, lalu pilih di dropdown **Sumber kamera** |
 | 6 | Terpasang `opencv-python-headless` | `pip uninstall opencv-python-headless && pip install opencv-python` |
 | 7 | OpenCV 5.x (Ultralytics resmi diuji di 4.x) | Kode sudah kompatibel; bila muncul error aneh saat inferensi: `pip install "opencv-python>=4.8,<5.0"` |
+| 8 | Pemindaian terlihat **macet/diam** | Tidak mungkin macet: tiap percobaan dibatasi 4 detik dan progresnya dicetak. Perkecil lagi: `python -m src.core.camera --max-index 2 --timeout 2` |
 
 **Pemindaian kamera dari terminal:**
 
 ```bash
-python -m src.core.camera          # atau: python -m src.headless --list-cameras
+python -m src.core.camera                                # pindai 0..4
+python -m src.core.camera --max-index 2 --timeout 2      # lebih cepat
+python -m src.headless --list-cameras                    # sama, dari modul headless
+```
+
+Pemindaian **tidak pernah menggantung**: setiap percobaan backend dibatasi
+`--timeout` detik (default 4) dan progresnya langsung terlihat:
+
+```
+  · menguji indeks 0 ...
+      - backend DSHOW        (maks 4s)
+      ✅ indeks 0 berhasil via DSHOW (1280x720)
+  · menguji indeks 1 ...
+      - backend DSHOW        (maks 4s)
+      ❌ indeks 1 tidak menghasilkan frame
 ```
 
 Aplikasi sekarang juga otomatis:

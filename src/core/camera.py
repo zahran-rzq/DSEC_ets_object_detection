@@ -176,26 +176,99 @@ class _QuietOpenCV:
         return False
 
 
+_ORPHANS: List[tuple] = []      # (thread, box) percobaan yang ditinggalkan
+
+
+def _reap_orphans() -> None:
+    """Rilis kamera dari percobaan yang ditinggalkan karena timeout."""
+    alive = []
+    for t, box in _ORPHANS:
+        if t.is_alive():
+            alive.append((t, box))
+            continue
+        r = box.get("r")
+        if r and r[0] is not None:
+            try:
+                r[0].release()
+            except Exception:
+                pass
+    _ORPHANS[:] = alive
+
+
+def _try_open_timeout(source, backend_id, backend_name, width, height, fps,
+                      warmup_attempts: int = 30, warmup_delay: float = 0.1,
+                      timeout: float = 6.0):
+    """
+    Jalankan _try_open di thread terpisah dengan batas waktu.
+
+    Di Windows, `cv2.VideoCapture(indeks, CAP_DSHOW)` untuk indeks yang tidak
+    ada (atau kamera yang sedang dipakai aplikasi lain) dapat MEMBLOKIR TANPA
+    BATAS. Karena thread Python tidak bisa dibunuh, percobaan yang melewati
+    batas waktu ditinggalkan (thread daemon) dan kameranya dirilis belakangan
+    lewat _reap_orphans().
+    """
+    box: dict = {}
+
+    def job():
+        try:
+            box["r"] = _try_open(source, backend_id, backend_name,
+                                 width, height, fps,
+                                 warmup_attempts, warmup_delay)
+        except Exception:
+            box["r"] = (None, None, None)
+
+    t = threading.Thread(target=job, daemon=True)
+    t.start()
+    t.join(timeout)
+    if t.is_alive():
+        _ORPHANS.append((t, box))
+        return None, None, None
+    return box.get("r", (None, None, None))
+
+
 def probe_cameras(max_index: int = 5, width: int = 1280, height: int = 720,
-                  fps: int = 30) -> List[dict]:
+                  fps: int = 30, timeout: float = 4.0,
+                  on_progress=None, verbose: bool = False) -> List[dict]:
     """
     Pindai indeks kamera 0..max_index-1 dan kembalikan yang BENAR-BENAR
-    menghasilkan frame. Dipakai oleh tombol "Tes Kamera" pada GUI dan oleh
-    `python -m src.core.camera`.
+    menghasilkan frame.
+
+    Setiap percobaan dibatasi `timeout` detik dan progresnya dilaporkan lewat
+    `on_progress(str)` / `verbose=True`, sehingga pemindaian tidak pernah
+    terlihat "diam" walaupun ada indeks yang memblokir.
     """
     found: List[dict] = []
+    _reap_orphans()
+
+    def say(msg: str):
+        if verbose:
+            print(msg, flush=True)
+        if on_progress:
+            try:
+                on_progress(msg)
+            except Exception:
+                pass
+
     with _QuietOpenCV():
         for i in range(max_index):
+            say(f"  · menguji indeks {i} ...")
             for name, bid in _candidate_backends():
-                cap, frame, info = _try_open(i, bid, name, width, height, fps,
-                                             warmup_attempts=6, warmup_delay=0.08)
+                say(f"      - backend {name:<12} (maks {timeout:.0f}s)")
+                cap, frame, info = _try_open_timeout(
+                    i, bid, name, width, height, fps,
+                    warmup_attempts=6, warmup_delay=0.08, timeout=timeout)
                 if cap is not None:
                     cap.release()
                     if info:
                         info = dict(info)
                         info["ok"] = True
                         found.append(info)
+                    say(f"      ✅ indeks {i} berhasil via {name} "
+                        f"({info['width']}x{info['height']})" if info else f"      ✅ indeks {i}")
                     break     # kamera ini jalan, tidak perlu coba backend lain
+            else:
+                say(f"      ❌ indeks {i} tidak menghasilkan frame")
+    _reap_orphans()
     return found
 
 
@@ -255,16 +328,23 @@ class CameraThread(threading.Thread):
         self._lock = threading.Lock()
 
     # ------------------------------------------------------------- buka --
-    def open(self) -> bool:
-        """Coba buka kamera dengan semua backend yang mungkin."""
+    def open(self, timeout: float = 8.0, on_progress=None) -> bool:
+        """Coba buka kamera dengan semua backend yang mungkin (dibatasi waktu)."""
         errors: List[str] = []
         last_err = ""
+        _reap_orphans()
         backends = _candidate_backends(self.backend)
         if self.backend and self.backend.lower() not in ("auto", "", "any"):
-            print(f"ℹ️  Backend dipaksa: {self.backend}")
+            print(f"ℹ️  Backend dipaksa: {self.backend}", flush=True)
         for name, bid in backends:
-            cap, frame, info = _try_open(self.source, bid, name,
-                                         self.width, self.height, self.fps)
+            if on_progress:
+                try:
+                    on_progress(f"Mencoba backend {name} (maks {timeout:.0f}s) ...")
+                except Exception:
+                    pass
+            cap, frame, info = _try_open_timeout(
+                self.source, bid, name, self.width, self.height, self.fps,
+                warmup_attempts=20, warmup_delay=0.1, timeout=timeout)
             if cap is not None:
                 self.cap = cap
                 self.status.opened = True
@@ -373,6 +453,14 @@ class CameraThread(threading.Thread):
 # --------------------------------------------------------------------------
 def main() -> int:
     """CLI: `python -m src.core.camera` -> pindai dan laporkan kamera."""
+    import argparse
+    ap = argparse.ArgumentParser("Pemindai kamera SecureVision")
+    ap.add_argument("--max-index", type=int, default=5,
+                    help="indeks tertinggi yang dipindai (default 5 -> 0..4)")
+    ap.add_argument("--timeout", type=float, default=4.0,
+                    help="batas waktu tiap percobaan backend, detik (default 4)")
+    args, _ = ap.parse_known_args()
+
     print("=" * 66)
     print("  PEMINDAIAN KAMERA — SecureVision")
     print("=" * 66)
@@ -390,7 +478,9 @@ def main() -> int:
     except Exception:
         pass
 
-    found = probe_cameras(max_index=5)
+    print(f"Batas waktu tiap percobaan: {args.timeout:.0f}s (ganti dengan --timeout)", flush=True)
+    found = probe_cameras(max_index=args.max_index,
+                          timeout=args.timeout, verbose=True)
     if not found:
         print("❌ Tidak ada kamera yang menghasilkan frame.")
         print("\nLangkah pemeriksaan:")

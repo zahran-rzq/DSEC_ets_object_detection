@@ -97,6 +97,7 @@ class App(ctk.CTk):
         self._start_job: Optional[dict] = None     # hasil buka kamera (dari thread)
         self._probe_pending = None                 # hasil pemindaian kamera
         self._probe_running = False
+        self._probe_msgs = []                      # progres pemindaian (dari thread)
         self._last_frame: Optional[np.ndarray] = None
         self._rec_start = 0.0
         self._cls_vars: Dict[str, ctk.BooleanVar] = {}
@@ -438,9 +439,10 @@ class App(ctk.CTk):
 
         def job():
             try:
-                res = probe_cameras(max_index=5)
+                res = probe_cameras(max_index=5, timeout=4.0,
+                                    on_progress=self._probe_msgs.append)
             except Exception as e:
-                self._log(f"❌ Pemindaian gagal: {e}")
+                self._probe_msgs.append(f"❌ Pemindaian gagal: {e}")
                 res = []
             self._probe_pending = res
 
@@ -489,7 +491,7 @@ class App(ctk.CTk):
                 self.cfg.camera.height, self.cfg.camera.fps,
                 backend=getattr(self.cfg.camera, "backend", "auto"),
                 flip=self.cfg.camera.flip_horizontal)
-            if not cam.open():
+            if not cam.open(timeout=8.0, on_progress=self._probe_msgs.append):
                 self._start_job = {"state": "error",
                                    "msg": cam.status.error or "Kamera gagal dibuka."}
                 return
@@ -568,6 +570,10 @@ class App(ctk.CTk):
     def _ui_loop(self):
         """Dipanggil tiap ~60 ms dari main thread Tk."""
         self.clock_lbl.configure(text=datetime.now().strftime("%H:%M:%S"))
+
+        # progres pemindaian / pembukaan kamera (dari thread -> ke log)
+        while self._probe_msgs:
+            self._log(self._probe_msgs.pop(0))
 
         # hasil pemindaian kamera (dikerjakan di thread -> diterapkan di sini)
         if self._probe_pending is not None:
