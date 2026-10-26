@@ -1,0 +1,22 @@
+# =============================================================
+# SecureVision -- DSEC Security Camera Application
+#   pip install -r requirements.txt
+# =============================================================
+
+# --- inti (wajib) ---
+ultralytics>=8.3.0        # YOLO pre-trained (YOLOv11 / YOLOv8)
+opencv-python>=4.8.0      # akuisisi webcam, anotasi, penulisan video
+numpy>=1.23
+pillow>=9.5               # konversi frame -> gambar untuk GUI
+
+# --- GUI desktop (tema terang) ---
+customtkinter>=5.2.0      # butuh python3-tk  (Linux: sudo apt install python3-tk)
+
+# --- notebook / evaluasi (Colab) ---
+matplotlib>=3.7
+pandas>=1.5
+pyyaml>=6.0
+tqdm>=4.65
+
+# --- opsional: unggah/unduh dataset dari Roboflow ---
+# roboflow>=1.1.0

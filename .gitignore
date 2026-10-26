@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Hasil runtime (jangan dikomit)
+runs/
+*.pt
+*.onnx
+*.engine
+*.mp4
+*.avi
+snapshots/
+events.csv
+!mockup/*.png
+
+# Dataset (besar)
+datasets/
+*.zip
+*.tar.gz
+
+# Colab / Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db

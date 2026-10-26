@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAPORAN_Soal2</title>
+<style>
+:root{
+  --bg:#ffffff; --text:#1b2430; --muted:#6b7688; --accent:#2563eb;
+  --border:#dce1ea; --panel:#f7f9fc; --code:#f4f6fa;
+}
+*{box-sizing:border-box}
+body{
+  font-family:"Segoe UI","DejaVu Sans",system-ui,-apple-system,sans-serif;
+  color:var(--text); background:var(--bg);
+  line-height:1.7; font-size:11.5pt;
+  max-width:210mm; margin:0 auto; padding:18mm 16mm;
+}
+h1{font-size:22pt; line-height:1.25; border-bottom:3px solid var(--accent);
+   padding-bottom:8px; margin:0 0 6px}
+h1+h3{color:var(--muted); font-weight:400; font-size:12pt; margin-top:0}
+h2{font-size:15.5pt; margin-top:26px; padding:6px 0 6px 12px;
+   border-left:5px solid var(--accent); background:var(--panel);
+   page-break-after:avoid; break-after:avoid}
+h3{font-size:13pt; margin-top:20px; color:#0f172a; page-break-after:avoid}
+h4{font-size:11.8pt; margin-top:16px; color:#334155; page-break-after:avoid}
+p{margin:8px 0; text-align:justify}
+a{color:var(--accent); text-decoration:none}
+table{border-collapse:collapse; width:100%; margin:14px 0; font-size:10pt;
+      page-break-inside:avoid}
+th,td{border:1px solid var(--border); padding:6px 9px; text-align:left;
+      vertical-align:top}
+th{background:var(--panel); font-weight:600}
+tr:nth-child(even) td{background:#fcfdff}
+code{background:var(--code); border:1px solid var(--border); border-radius:4px;
+     padding:1px 5px; font-family:"DejaVu Sans Mono",Consolas,monospace;
+     font-size:9.5pt; color:#b91c1c}
+pre{background:#0f172a; color:#e2e8f0; padding:12px 14px; border-radius:8px;
+    overflow-x:auto; font-size:9pt; line-height:1.5; page-break-inside:avoid}
+pre code{background:none; border:none; color:inherit; font-size:9pt; padding:0}
+blockquote{border-left:4px solid var(--accent); background:#eff6ff;
+           margin:12px 0; padding:8px 14px; border-radius:0 6px 6px 0}
+blockquote p{margin:4px 0}
+hr{border:none; border-top:1px solid var(--border); margin:22px 0}
+img{max-width:100%; border:1px solid var(--border); border-radius:8px;
+    display:block; margin:14px auto; page-break-inside:avoid}
+ul,ol{padding-left:22px}
+li{margin:3px 0}
+em{color:var(--muted)}
+strong{color:#0f172a}
+.pagebreak{page-break-before:always}
+@media print{
+  body{padding:0; max-width:none; font-size:10.5pt}
+  h2{page-break-before:auto}
+  pre,table,img,blockquote{page-break-inside:avoid}
+  @page{size:A4; margin:18mm 16mm}
+}
+</style>
+
+<script>
+  window.MathJax = {
+    tex: {inlineMath: [['$','$'], ['\\(','\\)']],
+          displayMath: [['$$','$$'], ['\\[','\\]']]},
+    options: {skipHtmlTags: ['script','noscript','style','textarea','pre','code']}
+  };
+</script>
+<script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+<h1 id="laporan-rancangan-sistem">LAPORAN RANCANGAN SISTEM</h1>
+<h2 id="aplikasi-desktop-kamera-keamanan-berbasis-deep-learning">Aplikasi Desktop Kamera Keamanan Berbasis Deep Learning</h2>
+<h3 id="deteksi-real-time-person-car-truck-motorbike-dengan-auto-snapshot-auto-recording">Deteksi Real-Time <code>person</code> · <code>car</code> · <code>truck</code> · <code>motorbike</code> dengan Auto-Snapshot &amp; Auto-Recording</h3>
+<p><strong>Mata Kuliah</strong> : Deep Learning for Security (DSEC)<br />
+<strong>Tugas</strong> : Soal 2 — Evaluasi Tengah Semester (ETS) — Bobot 50%<br />
+<strong>Topik</strong> : <em>Object Detection</em> dengan Model <em>Pre-Trained</em> untuk Sistem Pengawasan Cerdas</p>
+<hr />
+<h2 id="daftar-isi">Daftar Isi</h2>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>Bagian</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><a href="#bab-1--pendahuluan">Pendahuluan</a></td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="#bab-2--landasan-teori">Landasan Teori</a></td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="#bab-3--perancangan-sistem">Perancangan Sistem — Konfigurasi Model <em>Pre-Trained</em></a></td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="#bab-4--alur-kerja-sistem-system-workflow">Alur Kerja Sistem (<em>System Workflow</em>)</a></td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="#bab-5--metrik-evaluasi-deteksi">Metrik Evaluasi Deteksi</a></td>
+</tr>
+<tr>
+<td>6</td>
+<td><a href="#bab-6--perancangan-antarmuka-pengguna-ui">Perancangan Antarmuka Pengguna (UI)</a></td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="#bab-7--implementasi--cara-menjalankan">Implementasi &amp; Cara Menjalankan</a></td>
+</tr>
+<tr>
+<td>8</td>
+<td><a href="#bab-8--hasil-uji-coba">Hasil Uji Coba</a></td>
+</tr>
+<tr>
+<td>9</td>
+<td><a href="#bab-9--pembahasan-keterbatasan--pengembangan">Pembahasan, Keterbatasan &amp; Pengembangan</a></td>
+</tr>
+<tr>
+<td>10</td>
+<td><a href="#bab-10--penutup--daftar-pustaka">Penutup &amp; Daftar Pustaka</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><a id="bab-1--pendahuluan"></a></p>
+<h2 id="bab-1-pendahuluan">BAB 1 — PENDAHULUAN</h2>
+<h3 id="11-latar-belakang">1.1 Latar Belakang</h3>
+<p>Sistem pengawasan konvensional (CCTV analog) hanya merekam dan menyimpan; proses<br />
+"mengawasi" masih dilakukan manusia secara pasif. Kelemahannya terukur: operator<br />
+kehilangan konsentrasi setelah ±20 menit menatap layar, dan 1 operator tidak<br />
+mampu memantau lebih dari 4–9 kamera sekaligus. Akibatnya, kejadian penting<br />
+sering baru diketahui <strong>setelah</strong> ditelusuri ulang berjam-jam kemudian.</p>
+<p>Pendekatan <em>deep learning</em> mengubah paradigma ini menjadi <strong>pengawasan aktif</strong>:<br />
+komputer mendeteksi objek tertentu secara otomatis, lalu <strong>hanya merekam saat<br />
+ada kejadian yang relevan</strong>. Manfaatnya tiga kali lipat — (1) peringatan<br />
+<em>real-time</em>, (2) media penyimpanan hemat karena tidak menyimpan jam-jam rekaman<br />
+kosong, dan (3) pencarian forensik cepat karena setiap klip sudah terindeks<br />
+berdasarkan kelas objek dan waktu.</p>
+<p>Tugas ini meminta rancangan aplikasi desktop kamera keamanan yang:<br />
+1. terhubung ke <em>webcam</em> secara <em>real-time</em>,<br />
+2. <strong>hanya</strong> memproses empat kelas target: <code>person</code>, <code>car</code>, <code>truck</code>, <code>motorbike</code>,<br />
+3. otomatis menyimpan <strong>gambar</strong> dan merekam <strong>video</strong> ketika kelas tersebut<br />
+   terdeteksi.</p>
+<h3 id="12-rumusan-masalah">1.2 Rumusan Masalah</h3>
+<p>Berdasarkan latar belakang di atas, rumusan masalahnya adalah:</p>
+<ol>
+<li>Arsitektur <em>deep learning</em> apa yang tepat untuk deteksi objek <em>real-time</em>,<br />
+   dan bagaimana mengonfigurasi model <em>pre-trained</em> agar <strong>hanya</strong> memproses<br />
+   empat kelas target?</li>
+<li>Bagaimana alur kerja program dari pengambilan <em>frame</em> hingga logika<br />
+   kondisional yang memicu penyimpanan gambar dan perekaman video otomatis?</li>
+<li>Bagaimana memanfaatkan IoU, <em>Precision</em>, <em>Recall</em>, dan mAP untuk mengevaluasi<br />
+   akurasi deteksi, dan metrik mana yang paling krusial agar penyusup tidak<br />
+   lolos?</li>
+<li>Bagaimana merancang antarmuka pengguna bertema terang (<em>light theme</em>) yang<br />
+   memuat <em>feed</em> video, status deteksi, indikator perekaman, dan tombol kontrol?</li>
+</ol>
+<h3 id="13-tujuan-dan-ruang-lingkup">1.3 Tujuan dan Ruang Lingkup</h3>
+<p><strong>Tujuan</strong> — menghasilkan rancangan komprehensif dan <em>proof-of-concept</em> yang<br />
+dapat dijalankan: notebook Google Colab untuk pelatihan/evaluasi, serta aplikasi<br />
+desktop Python dengan GUI bertema terang, deteksi 4 kelas, dan perekaman otomatis.</p>
+<p><strong>Ruang lingkup</strong> — deteksi objek 2D pada aliran video <em>visible-light</em> (kamera<br />
+tampak). Diluar cakupan: pengenalan wajah/identitas, pelacakan lintas-kamera,<br />
+analitik perilaku tingkat lanjut, dan segmentasi.</p>
+<hr />
+<p><a id="bab-2--landasan-teori"></a></p>
+<h2 id="bab-2-landasan-teori">BAB 2 — LANDASAN TEORI</h2>
+<h3 id="21-hirarki-tugas-visi-komputer">2.1 Hirarki Tugas Visi Komputer</h3>
+<table>
+<thead>
+<tr>
+<th>Tugas</th>
+<th>Keluaran</th>
+<th>Cocok untuk keamanan?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Klasifikasi</strong></td>
+<td>1 label per gambar ("ada orang")</td>
+<td>❌ tidak tahu <strong>di mana</strong> objeknya</td>
+</tr>
+<tr>
+<td><strong>Lokalisasi</strong></td>
+<td>1 label + 1 kotak</td>
+<td>❌ hanya satu objek</td>
+</tr>
+<tr>
+<td><strong>Deteksi objek</strong></td>
+<td>banyak label + banyak kotak</td>
+<td>✅ bisa banyak objek sekaligus</td>
+</tr>
+<tr>
+<td><strong>Segmentasi</strong></td>
+<td>label per piksel</td>
+<td>✅ akurat tapi jauh lebih berat</td>
+</tr>
+</tbody>
+</table>
+<p>Kamera keamanan membutuhkan <strong>deteksi objek</strong>: harus mengetahui <strong>ada apa</strong> dan<br />
+<strong>di mana</strong>, untuk banyak objek sekaligus dalam satu <em>frame</em>.</p>
+<h3 id="22-single-stage-vs-two-stage-detector">2.2 <em>Single-Stage</em> vs <em>Two-Stage Detector</em></h3>
+<ul>
+<li><strong>Two-stage</strong> (R-CNN, Fast/Faster R-CNN, Mask R-CNN): tahap 1 menghasilkan<br />
+<em>region proposal</em> (calon lokasi objek), tahap 2 mengklasifikasi tiap <em>proposal</em>.<br />
+  Akurat, tetapi lambat — tipikal 5–7 FPS pada GPU.</li>
+<li><strong>Single-stage</strong> (YOLO, SSD, RetinaNet): satu kali <em>forward pass</em> pada seluruh<br />
+  gambar langsung menghasilkan semua kotak beserta kelasnya. Sedikit kurang<br />
+  akurat pada objek sangat kecil, tetapi <strong>sangat cepat</strong>.</li>
+</ul>
+<p>Untuk kamera keamanan yang harus memberi peringatan seketika, latensi adalah<br />
+persyaratan utama → dipilih <strong>YOLO</strong>.</p>
+<h3 id="23-yolo-you-only-look-once">2.3 YOLO (<em>You Only Look Once</em>)</h3>
+<p>YOLO membagi citra menjadi grid $S \times S$. Setiap sel memprediksi $B$ kotak<br />
+pembatas beserta <em>objectness score</em> dan probabilitas kelas:</p>
+<p>$$<br />
+\text{output per sel} = \big[\,x, y, w, h, p_{obj}, p_{c_1}, \dots, p_{c_n}\,\big]<br />
+$$</p>
+<p>Skor akhir tiap kotak: $\text{score} = p_{obj} \times \max_c p_c$.</p>
+<p>Karena ribuan kotak tumpang-tindih dihasilkan, diperlukan <strong>Non-Maximum<br />
+Suppression (NMS)</strong>: urutkan kotak berdasar skor, pertahankan yang tertinggi,<br />
+lalu hapus kotak lain dengan $\mathrm{IoU} &gt; t_{NMS}$ terhadapnya.</p>
+<h3 id="24-transfer-learning-dengan-model-pre-trained">2.4 <em>Transfer Learning</em> dengan Model <em>Pre-Trained</em></h3>
+<p>Melatih detektor dari nol butuh puluhan ribu gambar beranotasi dan GPU<br />
+berhari-hari. <em>Transfer learning</em> memakai model yang sudah dilatih pada<br />
+<strong>COCO</strong> (80 kelas, 118.000 gambar, 330.000 instance) sebagai titik awal.<br />
+Fitur tingkat rendah (tepi, sudut, tekstur) bersifat <strong>universal</strong>, sehingga<br />
+cukup di-<em>fine-tune</em> dengan ratusan gambar domain keamanan.</p>
+<p>Yang terpenting untuk tugas ini: <strong>keempat kelas target sudah ada di COCO</strong>,<br />
+sehingga model <em>pre-trained</em> dapat dipakai <strong>tanpa training sekalipun</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Kelas target (soal)</th>
+<th>Nama di COCO</th>
+<th>ID COCO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>person</td>
+<td>person</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td>car</td>
+<td>car</td>
+<td><strong>2</strong></td>
+</tr>
+<tr>
+<td>truck</td>
+<td>truck</td>
+<td><strong>7</strong></td>
+</tr>
+<tr>
+<td>motorbike</td>
+<td><em>motorcycle</em></td>
+<td><strong>3</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ <strong>Catatan penting untuk presentasi:</strong> istilah <strong>"motorbike"</strong> pada soal<br />
+sama dengan kelas <strong>"motorcycle"</strong> (id 3) pada COCO. Perbedaan hanya penamaan,<br />
+objeknya identik.</p>
+</blockquote>
+<hr />
+<p><a id="bab-3--perancangan-sistem"></a></p>
+<h2 id="bab-3-perancangan-sistem">BAB 3 — PERANCANGAN SISTEM</h2>
+<h3 id="menjawab-pertanyaan-1-konfigurasi-model-pre-trained">(Menjawab Pertanyaan 1: Konfigurasi Model <em>Pre-Trained</em>)</h3>
+<h3 id="31-arsitektur-sistem-keseluruhan">3.1 Arsitektur Sistem Keseluruhan</h3>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│                          LAPISAN AKUISISI                                │
+│   Webcam / CCTV RTSP ──► OpenCV VideoCapture ──► Frame BGR (1280×720)     │
+└───────────────────────────────┬──────────────────────────────────────────┘
+                                ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                        LAPISAN INFERENSI (YOLO)                          │
+│  resize + letterbox 640²  ► normalisasi ► forward pass ► NMS (IoU 0.45)  │
+│  ► FILTER KELAS classes=[0,2,3,7] ► conf per-kelas ► filter area/ROI     │
+└───────────────────────────────┬──────────────────────────────────────────┘
+                                ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                     LAPISAN LOGIKA (State Machine)                       │
+│   IDLE ──(objek N frame berturut)──► DETECTING ──► RECORDING ──► COOLDOWN│
+└───────────────────────────────┬──────────────────────────────────────────┘
+                                ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                     LAPISAN PENYIMPANAN BUKTI                            │
+│  Snapshot .jpg │ Klip .mp4 (pre-roll 3s + post-roll 4s) │ events.csv     │
+└───────────────────────────────┬──────────────────────────────────────────┘
+                                ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                   LAPISAN ANTARMUKA (GUI Light Theme)                    │
+│        Feed video │ Status deteksi │ Indikator REC │ Tombol kontrol      │
+└──────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<p>Modul-modul tersebut diimplementasikan terpisah agar mudah diuji dan diubah:</p>
+<table>
+<thead>
+<tr>
+<th>Berkas</th>
+<th>Tanggung jawab</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/core/config.py</code></td>
+<td>Seluruh parameter (kelas, threshold, durasi rekam)</td>
+</tr>
+<tr>
+<td><code>src/core/detector.py</code></td>
+<td><em>Wrapper</em> model YOLO + filter kelas/conf/ROI + anotasi</td>
+</tr>
+<tr>
+<td><code>src/core/recorder.py</code></td>
+<td><em>Ring buffer</em> (pre-roll), penulis MP4, snapshot JPG, log CSV</td>
+</tr>
+<tr>
+<td><code>src/core/pipeline.py</code></td>
+<td><em>State machine</em> pemicu rekaman (inti logika kondisional)</td>
+</tr>
+<tr>
+<td><code>src/core/metrics.py</code></td>
+<td>IoU, Precision, Recall, AP, mAP (implementasi mandiri)</td>
+</tr>
+<tr>
+<td><code>src/app.py</code></td>
+<td>GUI desktop bertema terang</td>
+</tr>
+<tr>
+<td><code>src/headless.py</code></td>
+<td>Mode tanpa GUI (uji otomatis / mini-PC)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-pemilihan-arsitektur-model">3.2 Pemilihan Arsitektur Model</h3>
+<p><strong>Keputusan: YOLOv11-nano (<code>yolo11n.pt</code>), <em>fallback</em> YOLOv8-nano.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Kriteria</th>
+<th>YOLOv11n / YOLOv8n</th>
+<th>Faster R-CNN (R50-FPN)</th>
+<th>SSD-MobileNetV2</th>
+<th>EfficientDet-D0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Jenis</td>
+<td>single-stage</td>
+<td>two-stage</td>
+<td>single-stage</td>
+<td>single-stage</td>
+</tr>
+<tr>
+<td>Parameter</td>
+<td>~2,6 M</td>
+<td>~41,5 M</td>
+<td>~4,3 M</td>
+<td>~3,9 M</td>
+</tr>
+<tr>
+<td>Komputasi</td>
+<td>~6,5 GFLOPs</td>
+<td>~180 GFLOPs</td>
+<td>~1,2 GFLOPs</td>
+<td>~2,5 GFLOPs</td>
+</tr>
+<tr>
+<td>Kecepatan (T4 GPU)</td>
+<td><strong>~8–12 ms/frame</strong></td>
+<td>140–200 ms</td>
+<td>~25 ms</td>
+<td>~30 ms</td>
+</tr>
+<tr>
+<td>mAP@50:95 (COCO)</td>
+<td>~39,5</td>
+<td>~40,2</td>
+<td>~22</td>
+<td>~33,8</td>
+</tr>
+<tr>
+<td>Ketersediaan bobot</td>
+<td>✅ resmi Ultralytics, 1 baris <code>pip</code></td>
+<td>tersedia</td>
+<td>tersedia</td>
+<td>tersedia</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Alasan pemilihan:</strong></p>
+<ol>
+<li><strong>Kecepatan <em>real-time</em></strong> — 8–12 ms/frame setara 80–120 FPS, jauh di atas<br />
+   kebutuhan 25–30 FPS kamera. Sisa komputasi dipakai untuk anotasi, enkode<br />
+   video, dan pembaruan GUI.</li>
+<li><strong>Akurasi sepadan</strong> — selisih mAP dengan Faster R-CNN &lt; 1 poin, namun<br />
+   ~15× lebih cepat. Pertukaran (<em>trade-off</em>) yang sangat menguntungkan untuk<br />
+   sistem <em>surveillance</em>.</li>
+<li><strong>Bobot sudah tersedia &amp; ekosistem matang</strong> — <code>YOLO("yolo11n.pt")</code> otomatis<br />
+   mengunduh bobot COCO; API-nya sudah mendukung argumen <code>classes=</code> yang<br />
+   menjadi kunci pembatasan kelas (lihat 3.4).</li>
+<li><strong>Mudah di-<em>deploy</em></strong> — satu berkas <code>.pt</code> 5 MB, dapat diekspor ke ONNX /<br />
+   TensorRT / TFLite untuk dipasang di perangkat <em>edge</em>.</li>
+<li><strong>Varian nano</strong> sengaja dipilih agar demo tetap lancar <strong>di laptop tanpa<br />
+   GPU</strong>. Jika tersedia GPU, tinggal ganti ke <code>yolo11s.pt</code>.</li>
+</ol>
+<h3 id="33-konfigurasi-dasar-model">3.3 Konfigurasi Dasar Model</h3>
+<pre><code class="language-python">WEIGHTS   = &quot;yolo11n.pt&quot;   # bobot pre-trained COCO
+IMG_SIZE  = 640            # letterbox 640×640 (standar YOLO)
+CONF      = 0.35           # ambang keyakinan global
+IOU_NMS   = 0.45           # ambang IoU Non-Maximum Suppression
+DEVICE    = 0              # GPU; &quot;cpu&quot; bila tanpa GPU
+</code></pre>
+<p><strong>Mengapa <code>IMG_SIZE = 640</code>?</strong> Nilai ini adalah titik keseimbangan: cukup besar<br />
+untuk mendeteksi orang berukuran sedang–jauh (objek ~30 px masih terdeteksi<br />
+berkat <em>feature pyramid</em>), namun tetap ringan. Untuk kamera yang memantau<br />
+halaman luas dengan objek kecil, naikkan ke 960–1280; untuk laptop lemah<br />
+turunkan ke 416.</p>
+<p><strong>Mengapa <code>IOU_NMS = 0.45</code>?</strong> Nilai 0,45–0,50 adalah standar COCO. Terlalu<br />
+kecil (0,2) akan menghapus kotak sah pada objek yang berdekatan (kerumunan<br />
+orang, parkiran motor); terlalu besar (0,8) menyisakan kotak ganda.</p>
+<h3 id="34-strategi-pembatasan-ke-4-kelas-target-tiga-lapis-filter">3.4 Strategi Pembatasan ke 4 Kelas Target — Tiga Lapis Filter</h3>
+<p>Ini adalah inti jawaban pertanyaan 1. Pembatasan dilakukan bertingkat, dari<br />
+yang paling hemat komputasi:</p>
+<h4 id="lapis-1-filter-di-level-model-classes0-2-3-7">Lapis 1 — Filter di level model: <code>classes=[0, 2, 3, 7]</code></h4>
+<pre><code class="language-python">results = model.predict(
+    frame,
+    imgsz=640,
+    conf=0.30,             # ambang terendah; disaring ulang di lapis 2
+    iou=0.45,              # NMS
+    classes=[0, 2, 3, 7],  # person, car, motorcycle, truck
+    device=0,
+    verbose=False,
+)
+</code></pre>
+<p>Argumen <code>classes=</code> pada Ultralytics membuat <em>logit</em> 76 kelas lain dibuang<br />
+<strong>sebelum NMS</strong>. Dampaknya nyata:<br />
+* komputasi NMS turun karena kandidat kotak jauh lebih sedikit;<br />
+* <em>false positive</em> dari kelas mirip — <code>bus</code>, <code>bicycle</code>, <code>dog</code>, <code>cat</code>, <code>chair</code>,<br />
+<code>potted plant</code>, <code>traffic light</code> — <strong>tidak pernah muncul</strong>;<br />
+* tidak mungkin lagi terjadi "terdeteksi <code>bus</code> lalu dipetakan ke <code>truck</code>".</p>
+<blockquote>
+<p><strong>Catatan untuk ujian:</strong> penyaringan <strong>boleh</strong> dilakukan di level aplikasi<br />
+dengan <code>if name in TARGETS: ...</code>, tetapi itu hanya membuang hasil <em>setelah</em><br />
+seluruh komputasi selesai. Menyaring di level model (<code>classes=</code>) adalah<br />
+praktik yang benar karena menghemat waktu sekaligus mencegah kebingungan<br />
+antar-kelas yang mirip.</p>
+</blockquote>
+<h4 id="lapis-2-ambang-keyakinan-per-kelas">Lapis 2 — Ambang keyakinan per kelas</h4>
+<p>Tidak semua kelas pantas diperlakukan sama. Untuk sistem keamanan, <strong>orang</strong><br />
+adalah kelas paling kritis, sehingga dibuat paling sensitif:</p>
+<pre><code class="language-python">PER_CLASS_CONF = {
+    &quot;person&quot;:    0.30,   # paling sensitif (recall tinggi)
+    &quot;motorbike&quot;: 0.35,
+    &quot;car&quot;:       0.40,   # lebih ketat: mengurangi alarm palsu
+    &quot;truck&quot;:     0.40,
+}
+</code></pre>
+<p>Implementasinya: model dipanggil dengan <code>conf</code> <strong>terendah</strong> di antara<br />
+<code>PER_CLASS_CONF</code>, lalu setiap hasil disaring ulang berdasar ambang kelasnya.</p>
+<h4 id="lapis-3-filter-spasial-di-level-aplikasi">Lapis 3 — Filter spasial di level aplikasi</h4>
+<pre><code class="language-python">min_area   = 900     # piksel²: buang kotak &lt; ~30×30 px (noise jauh)
+roi_polygon = []     # opsional: hanya area tertentu, mis. polygon pintu masuk
+</code></pre>
+<p><em>Filter area</em> mencegah objek sangat jauh/berukuran beberapa piksel memicu<br />
+rekaman. <em>Filter ROI</em> berguna untuk mengabaikan jalan raya di luar pagar yang<br />
+terlihat di sudut kamera — sumber alarm palsu paling umum pada CCTV.</p>
+<h4 id="kode-lengkap-satu-fungsi-gabungan-tiga-lapis">Kode lengkap satu fungsi (gabungan tiga lapis)</h4>
+<pre><code class="language-python">COCO_CLASS_IDS = {&quot;person&quot;: 0, &quot;car&quot;: 2, &quot;motorbike&quot;: 3, &quot;truck&quot;: 7}  # 3=motorcycle
+
+def detect_targets(frame_bgr, model, per_class_conf=PER_CLASS_CONF,
+                   conf=0.35, iou=0.45, imgsz=640, min_area=900):
+    id2name = {v: k for k, v in COCO_CLASS_IDS.items()}
+    conf_min = min(list(per_class_conf.values()) + [conf])
+    res = model.predict(frame_bgr, imgsz=imgsz, conf=conf_min, iou=iou,
+                        classes=sorted(COCO_CLASS_IDS.values()),
+                        verbose=False)[0]
+    out = []
+    for b in res.boxes:
+        name = id2name.get(int(b.cls))
+        if name is None:                                # lapis 1: kelas
+            continue
+        c = float(b.conf)
+        if c &lt; per_class_conf.get(name, conf):          # lapis 2: conf/kelas
+            continue
+        x1, y1, x2, y2 = map(float, b.xyxy[0])
+        if (x2 - x1) * (y2 - y1) &lt; min_area:            # lapis 3: ukuran
+            continue
+        out.append({&quot;name&quot;: name, &quot;conf&quot;: round(c, 3),
+                    &quot;box&quot;: [round(v) for v in (x1, y1, x2, y2)]})
+    return out
+</code></pre>
+<h3 id="35-konfigurasi-fine-tuning-opsional">3.5 Konfigurasi <em>Fine-Tuning</em> (opsional)</h3>
+<p>Bila kamera memiliki karakteristik khusus (sudut <em>top-down</em>, malam hari,<br />
+inframerah), lakukan <em>fine-tuning</em> ringan:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Nilai</th>
+<th>Alasan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pretrained</code></td>
+<td><code>True</code></td>
+<td>mulai dari bobot COCO</td>
+</tr>
+<tr>
+<td><code>freeze</code></td>
+<td>10</td>
+<td>bekukan 10 blok <em>backbone</em> awal → cepat &amp; anti-<em>overfitting</em></td>
+</tr>
+<tr>
+<td><code>epochs</code></td>
+<td>50 (uji cepat: 5)</td>
+<td>dengan <em>early stopping</em> <code>patience=10</code></td>
+</tr>
+<tr>
+<td><code>batch</code></td>
+<td>16 (T4) / 8 (VRAM kecil)</td>
+<td>disesuaikan memori</td>
+</tr>
+<tr>
+<td><code>imgsz</code></td>
+<td>640</td>
+<td>sama dengan saat inferensi</td>
+</tr>
+<tr>
+<td><code>optimizer</code></td>
+<td><code>auto</code> (AdamW)</td>
+<td>konvergen stabil</td>
+</tr>
+<tr>
+<td><code>cos_lr</code></td>
+<td><code>True</code></td>
+<td><em>learning rate</em> kosinus → konvergen lebih halus</td>
+</tr>
+<tr>
+<td>Augmentasi</td>
+<td><code>hsv_h=0.015</code>, <code>fliplr=0.5</code>, <code>scale=0.5</code>, <code>mosaic=1.0</code></td>
+<td>tahan variasi cahaya &amp; sudut</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Remapping label.</strong> Dataset publik umumnya berlabel 80 kelas. Agar model<br />
+<strong>benar-benar hanya mengenal 4 kelas</strong> (bukan sekadar difilter saat inferensi),<br />
+label di-remap ke <code>0..3</code> dan baris kelas lain dihapus dari berkas <code>.txt</code>.<br />
+Fungsi <code>remap_dataset_to_targets()</code> pada notebook melakukan hal ini otomatis.</p>
+<hr />
+<p><a id="bab-4--alur-kerja-sistem-system-workflow"></a></p>
+<h2 id="bab-4-alur-kerja-sistem-system-workflow">BAB 4 — ALUR KERJA SISTEM (<em>SYSTEM WORKFLOW</em>)</h2>
+<h3 id="menjawab-pertanyaan-2">(Menjawab Pertanyaan 2)</h3>
+<h3 id="41-diagram-alur-lengkap">4.1 Diagram Alur Lengkap</h3>
+<pre><code>                          ┌─────────────────┐
+                          │   MULAI / INIT  │
+                          │ muat model YOLO │
+                          │ buka VideoCapture│
+                          └────────┬────────┘
+                                   ▼
+                     ┌─────────────────────────────┐
+              (1)    │  cap.read() → frame BGR     │◄──────────────┐
+                     └─────────────┬───────────────┘               │
+                                   ▼                                │
+                     ┌─────────────────────────────┐               │
+              (2)    │  push frame ke RingBuffer   │               │
+                     │  (pre-roll 3 detik)         │               │
+                     └─────────────┬───────────────┘               │
+                                   ▼                                │
+                     ┌─────────────────────────────┐               │
+              (3)    │  PREPROCESS: resize+letterbox│              │
+                     │  ke 640×640, normalisasi    │               │
+                     └─────────────┬───────────────┘               │
+                                   ▼                                │
+                     ┌─────────────────────────────┐               │
+              (4)    │  INFERENSI: forward pass    │               │
+                     │  YOLO → NMS (IoU 0.45)      │               │
+                     │  → classes=[0,2,3,7]        │               │
+                     └─────────────┬───────────────┘               │
+                                   ▼                                │
+                     ┌─────────────────────────────┐               │
+              (5)    │  POST-FILTER: conf/kelas,   │               │
+                     │  area minimum, ROI          │               │
+                     └─────────────┬───────────────┘               │
+                                   ▼                                │
+                     ┌─────────────────────────────┐               │
+              (6)    │  ada target?                │               │
+                     │   ya → streak++             │               │
+                     │   tdk→ streak = 0           │               │
+                     └─────────────┬───────────────┘               │
+                                   ▼                                │
+                     ┌──────────────────────────────────────────┐  │
+              (7)    │  LOGIKA KONDISIONAL (state machine)      │  │
+                     │                                          │  │
+                     │  if streak &gt;= 3 and not REC and          │  │
+                     │     (now - last_stop) &gt;= 5s:             │  │
+                     │         ──► SIMPAN SNAPSHOT (.jpg)       │  │
+                     │         ──► MULAI REKAM (.mp4)           │  │
+                     │              · flush pre-roll dulu        │  │
+                     │              · tulis frame baru           │  │
+                     │                                          │  │
+                     │  if REC and tidak ada target &gt; 4s:       │  │
+                     │         ──► STOP REKAM, cooldown 5s      │  │
+                     │                                          │  │
+                     │  if REC and durasi &gt; 60s:                │  │
+                     │         ──► ROTASI file baru             │  │
+                     └─────────────┬────────────────────────────┘  │
+                                   ▼                                │
+                     ┌─────────────────────────────┐               │
+              (8)    │  ANOTASI + HUD: kotak, label,│              │
+                     │  state, FPS, indikator REC  │               │
+                     └─────────────┬───────────────┘               │
+                                   ▼                                │
+                     ┌─────────────────────────────┐               │
+              (9)    │  TAMPILKAN di GUI + update  │───────────────┘
+                     │  panel status / log         │   (loop 30 fps)
+                     └─────────────────────────────┘
+</code></pre>
+<h3 id="42-penjelasan-tiap-tahap">4.2 Penjelasan Tiap Tahap</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Tahap</th>
+<th>Penjelasan teknis</th>
+<th>Keluaran</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Akuisisi frame</strong></td>
+<td><code>cv2.VideoCapture(0)</code> dibaca di <em>thread</em> terpisah agar GUI tidak tersendat. Antrean berkapasitas 2 frame → frame lama dibuang bila inferensi lambat, sehingga sistem selalu memproses keadaan <strong>terkini</strong>, bukan menumpuk jeda.</td>
+<td><code>ndarray</code> BGR 1280×720</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Ring buffer (pre-roll)</strong></td>
+<td>3 detik terakhir (60 frame @20 fps) terus disimpan di memori. Saat pemicu aktif, isi buffer <strong>ditulis lebih dulu</strong> ke berkas video → rekaman menampilkan beberapa detik <strong>sebelum</strong> kejadian. Ini penting untuk forensik: tanpa pre-roll, klip baru dimulai saat penyusup <strong>sudah</strong> berada di dalam area.</td>
+<td>60 frame</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Preprocessing</strong></td>
+<td><em>Resize</em> dengan mempertahankan rasio aspek (<em>letterbox</em>) ke 640×640, nilai piksel dinormalisasi ke $[0,1]$, lalu diubah ke tensor $1\times3\times640\times640$. <em>Letterbox</em> (bukan <em>stretch</em>) mencegah distorsi bentuk orang/kendaraan.</td>
+<td>tensor</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Inferensi</strong></td>
+<td>Satu <em>forward pass</em> menghasilkan ~8.400 kandidat kotak; NMS dengan $t_{IoU}=0{,}45$ merampingkannya; <code>classes=[0,2,3,7]</code> membuang 76 kelas lain.</td>
+<td>daftar kotak</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Post-filter</strong></td>
+<td>Ambang <em>confidence</em> per kelas, luas kotak minimum (900 px²), dan opsional ROI.</td>
+<td>deteksi valid</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Debounce (<em>streak</em>)</strong></td>
+<td>Penghitung frame berturut-turut berisi target. Deteksi 1 frame diabaikan → menekan <em>false positive</em> akibat <em>flicker</em>, kompresi video, atau bayangan sesaat.</td>
+<td><code>streak</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>Logika kondisional</strong></td>
+<td>Inti sistem (rincian di 4.3).</td>
+<td>aksi simpan/rekam</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>Anotasi &amp; HUD</strong></td>
+<td>Kotak berwarna per kelas, label <code>kelas + confidence</code>, bilah status atas (state, FPS, jam), dan titik merah berkedip saat merekam.</td>
+<td>frame siap tayang</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>Tampilan &amp; log</strong></td>
+<td>Frame dikonversi BGR→RGB lalu ke <code>CTkImage</code>; panel kanan menampilkan jumlah per kelas, FPS, dan 12 kejadian terakhir.</td>
+<td>GUI</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43-rincian-logika-kondisional-pertanyaan-inti">4.3 Rincian Logika Kondisional (Pertanyaan Inti)</h3>
+<pre><code class="language-python"># --- Konstanta pemicu ---
+MIN_CONSECUTIVE_FRAMES = 3     # debounce: harus 3 frame berturut-turut
+COOLDOWN_SECONDS       = 5.0   # jeda antar dua event (cegah spam berkas)
+PRE_ROLL_SECONDS       = 3.0   # rekam 3 detik SEBELUM pemicu
+POST_ROLL_SECONDS      = 4.0   # berhenti 4 detik SETELAH objek hilang
+MAX_CLIP_SECONDS       = 60.0  # rotasi berkas (cegah file raksasa)
+SNAPSHOT_COOLDOWN      = 2.0   # jeda antar snapshot
+
+# --- Algoritma per frame ---
+for frame in camera:
+    if not REC:
+        ring_buffer.push(frame)                       # pre-roll
+    res = detector.predict(frame)                     # inferensi + filter
+    hit = len(res) &gt; 0
+    streak = streak + 1 if hit else 0
+    if hit:
+        last_hit = now()
+
+    if REC:
+        writer.write(annotated_frame)                 # tulis frame
+        if now() - start &gt; MAX_CLIP_SECONDS:          # (a) rotasi
+            stop(); start()                            #     berkas baru
+        elif not hit and now() - last_hit &gt; POST_ROLL_SECONDS:
+            stop()                                     # (b) objek hilang
+            last_stop = now()
+    else:
+        if (streak &gt;= MIN_CONSECUTIVE_FRAMES          # (c) syarat mulai
+                and now() - last_stop &gt; COOLDOWN_SECONDS):
+            if SAVE_SNAPSHOT:
+                save_jpg(annotated_frame)             # simpan gambar
+            start_recording(pre_roll=ring_buffer)     # mulai rekam video
+            log_event(&quot;REC_START&quot;, res)
+</code></pre>
+<p><strong>Empat kondisi kunci dan alasannya:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Kondisi</th>
+<th>Tanpa pengaman</th>
+<th>Dengan pengaman</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>(c) <code>streak ≥ 3</code></strong></td>
+<td>Bayangan daun melintas 1 frame → langsung merekam</td>
+<td>Diabaikan: butuh 3 frame berturut-turut</td>
+</tr>
+<tr>
+<td><strong><code>cooldown 5s</code></strong></td>
+<td>Orang berdiri 10 menit → 600 berkas snapshot</td>
+<td>1 event, lalu jeda; snapshot dibatasi 2 detik/berkas</td>
+</tr>
+<tr>
+<td><strong>(b) <code>post-roll 4s</code></strong></td>
+<td>Objek tersembunyi 0,5 detik di balik tiang → rekaman terpotong-potong menjadi banyak klip</td>
+<td>Rekaman satu klip utuh; jeda singkat ditoleransi</td>
+</tr>
+<tr>
+<td><strong>(a) <code>max 60s</code></strong></td>
+<td>Satu berkas video berukuran ratusan MB, berat dibuka</td>
+<td>Berkas dipecah per menit, mudah dikelola</td>
+</tr>
+</tbody>
+</table>
+<h3 id="44-tabel-transisi-state">4.4 Tabel Transisi <em>State</em></h3>
+<table>
+<thead>
+<tr>
+<th>State saat ini</th>
+<th>Kondisi</th>
+<th>State berikutnya</th>
+<th>Aksi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IDLE</code></td>
+<td>tidak ada target</td>
+<td><code>IDLE</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>IDLE</code></td>
+<td>target terdeteksi, <code>streak &lt; 3</code></td>
+<td><code>DETECTING</code></td>
+<td>tampilkan peringatan kuning</td>
+</tr>
+<tr>
+<td><code>DETECTING</code></td>
+<td><code>streak ≥ 3</code> <strong>dan</strong> lewat <em>cooldown</em></td>
+<td><code>RECORDING</code></td>
+<td>simpan JPG + mulai MP4</td>
+</tr>
+<tr>
+<td><code>RECORDING</code></td>
+<td>target masih ada</td>
+<td><code>RECORDING</code></td>
+<td>terus menulis frame</td>
+</tr>
+<tr>
+<td><code>RECORDING</code></td>
+<td>target hilang &gt; 4 detik</td>
+<td><code>COOLDOWN</code></td>
+<td>tutup berkas, catat ke CSV</td>
+</tr>
+<tr>
+<td><code>RECORDING</code></td>
+<td>durasi &gt; 60 detik</td>
+<td><code>RECORDING</code></td>
+<td>rotasi ke berkas baru</td>
+</tr>
+<tr>
+<td><code>COOLDOWN</code></td>
+<td>target muncul lagi setelah 5 detik</td>
+<td><code>RECORDING</code></td>
+<td>event baru</td>
+</tr>
+</tbody>
+</table>
+<h3 id="45-spesifikasi-keluaran">4.5 Spesifikasi Keluaran</h3>
+<pre><code>runs/capture/
+├── rec_20250115_203412_0001.mp4     # klip kejadian (pre-roll + kejadian + post-roll)
+├── rec_20250115_203501_0002.mp4
+├── snapshots/
+│   ├── snap_20250115_203412_person_car.jpg
+│   └── snap_20250115_203501_person.jpg
+└── events.csv                        # timestamp,event,classes,conf,n_objects,file
+</code></pre>
+<p>Contoh isi <code>events.csv</code>:</p>
+<pre><code class="language-csv">timestamp,event,classes,conf,n_objects,file
+2025-01-15 20:34:12,REC_START,&quot;person&quot;,0.87,1,rec_20250115_203412_0001.mp4
+2025-01-15 20:34:12,SNAPSHOT,&quot;person&quot;,0.87,1,snap_20250115_203412_person.jpg
+2025-01-15 20:34:29,REC_STOP,&quot;person&quot;,0.87,340,rec_20250115_203412_0001.mp4
+</code></pre>
+<p><strong>Mengapa anotasi digambar pada berkas yang disimpan?</strong> Untuk barang bukti,<br />
+gambar/video <strong>beranotasi</strong> jauh lebih mudah diverifikasi manusia (kotak +<br />
+label + <em>confidence</em> + <em>timestamp</em>). Namun tersedia opsi<br />
+<code>annotate_video = False</code> bila diperlukan rekaman mentah.</p>
+<hr />
+<p><a id="bab-5--metrik-evaluasi-deteksi"></a></p>
+<h2 id="bab-5-metrik-evaluasi-deteksi">BAB 5 — METRIK EVALUASI DETEKSI</h2>
+<h3 id="menjawab-pertanyaan-3">(Menjawab Pertanyaan 3)</h3>
+<h3 id="51-intersection-over-union-iou">5.1 <em>Intersection over Union</em> (IoU)</h3>
+<p>IoU (alias <em>Jaccard Index</em>) mengukur tumpang-tindih kotak prediksi $B_p$<br />
+dengan kotak <em>ground truth</em> $B_{gt}$:</p>
+<p>$$<br />
+\mathrm{IoU} = \frac{\text{area}(B_p \cap B_{gt})}{\text{area}(B_p \cup B_{gt})}<br />
+= \frac{|B_p \cap B_{gt}|}{|B_p| + |B_{gt}| - |B_p \cap B_{gt}|}<br />
+$$</p>
+<table>
+<thead>
+<tr>
+<th>IoU</th>
+<th>Interpretasi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1,00</td>
+<td>kotak identik</td>
+</tr>
+<tr>
+<td>0,50</td>
+<td>tumpang-tindih cukup — <strong>ambang standar COCO</strong> untuk menyatakan deteksi benar</td>
+</tr>
+<tr>
+<td>0,33</td>
+<td>setengah bergeser</td>
+</tr>
+<tr>
+<td>0,00</td>
+<td>tidak bersinggungan sama sekali</td>
+</tr>
+</tbody>
+</table>
+<p>IoU dipakai di <strong>dua</strong> tempat berbeda:<br />
+1. <strong>NMS</strong> — menghapus kotak ganda pada objek yang sama ($t \approx 0{,}45$).<br />
+2. <strong>Penentu benar/salah</strong> — prediksi dihitung <em>True Positive</em> bila<br />
+   $\mathrm{IoU} \ge t$ <strong>dan</strong> kelasnya sama ($t = 0{,}50$ untuk mAP@0.50;<br />
+   $t = 0{,}50, 0{,}55, \dots, 0{,}95$ untuk COCO mAP).</p>
+<h3 id="52-confusion-matrix-deteksi-objek">5.2 <em>Confusion Matrix</em> Deteksi Objek</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Definisi</th>
+<th>pada CCTV</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TP</strong> (<em>True Positive</em>)</td>
+<td>objek ada, terdeteksi, IoU ≥ t, kelas benar</td>
+<td>penyusup terdeteksi ✅</td>
+</tr>
+<tr>
+<td><strong>FP</strong> (<em>False Positive</em>)</td>
+<td>model mendeteksi sesuatu yang tidak ada (atau IoU &lt; t)</td>
+<td>alarm palsu (kucing, bayangan) ⚠️</td>
+</tr>
+<tr>
+<td><strong>FN</strong> (<em>False Negative</em>)</td>
+<td>objek ada tetapi <strong>tidak terdeteksi</strong></td>
+<td><strong>penyusup lolos</strong> 🔴</td>
+</tr>
+<tr>
+<td><strong>TN</strong></td>
+<td>tidak ada objek &amp; tidak ada deteksi</td>
+<td>tidak dihitung dalam deteksi objek</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53-precision-dan-recall">5.3 <em>Precision</em> dan <em>Recall</em></h3>
+<p>$$<br />
+\mathrm{Precision} = \frac{TP}{TP + FP}<br />
+\qquad\qquad<br />
+\mathrm{Recall} = \frac{TP}{TP + FN}<br />
+$$</p>
+<ul>
+<li><strong>Precision</strong> menjawab: <em>"Dari semua yang dibilang 'ada orang', berapa yang<br />
+  benar-benar orang?"</em> → mengukur <strong>keandalan alarm</strong>.</li>
+<li><strong>Recall</strong> menjawab: <em>"Dari semua orang yang benar-benar lewat, berapa yang<br />
+  berhasil ditangkap?"</em> → mengukur <strong>cakupan pengawasan</strong>.</li>
+</ul>
+<p>Keduanya <strong>berlawanan</strong>: menurunkan ambang <em>confidence</em> menaikkan recall tetapi<br />
+menurunkan precision, dan sebaliknya. Karena itu diperlukan metrik gabungan.</p>
+<p>$$<br />
+F_\beta = \frac{(1+\beta^2)\,P\,R}{\beta^2 P + R}<br />
+\quad<br />
+\begin{cases}<br />
+\beta = 1 &amp; F_1 \text{ — seimbang (umum)} \<br />
+\beta = 2 &amp; F_2 \text{ — bobot recall 4}\times \textbf{(keamanan)}<br />
+\end{cases}<br />
+$$</p>
+<h3 id="54-average-precision-ap-dan-mean-average-precision-map">5.4 <em>Average Precision</em> (AP) dan <em>mean Average Precision</em> (mAP)</h3>
+<ol>
+<li>Untuk satu kelas, urutkan semua prediksi berdasar <em>confidence</em> menurun.</li>
+<li>Hitung kumulatif TP dan FP → dapatkan kurva <strong>Precision–Recall</strong>.</li>
+<li><strong>AP</strong> = luas di bawah kurva tersebut (dengan interpolasi <em>monoton turun</em><br />
+   ala VOC, atau <em>101-point/COCO all-point</em>):</li>
+</ol>
+<p>$$<br />
+\mathrm{AP} = \int_0^1 p(r)\,dr \approx \sum_{k} (r_{k+1} - r_k)\,p_{k+1}<br />
+$$</p>
+<ol start="4">
+<li><strong>mAP</strong> = rata-rata AP terhadap seluruh kelas:</li>
+</ol>
+<p>$$<br />
+\mathrm{mAP} = \frac{1}{K}\sum_{k=1}^{K} \mathrm{AP}_k<br />
+$$</p>
+<p>Dua varian yang wajib disebut saat presentasi:</p>
+<table>
+<thead>
+<tr>
+<th>Metrik</th>
+<th>Ambang IoU</th>
+<th>Arti</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>mAP@0.50</strong></td>
+<td>hanya 0,50</td>
+<td>"apakah objeknya ketemu?" — longgar, cukup untuk laporan sederhana</td>
+</tr>
+<tr>
+<td><strong>mAP@0.50:0.95</strong></td>
+<td>rata-rata 0,50→0,95 (10 titik)</td>
+<td>metrik utama COCO; menuntut <strong>lokalisasi presisi</strong>, nilainya selalu lebih rendah</td>
+</tr>
+</tbody>
+</table>
+<h3 id="55-contoh-perhitungan-numerik-siap-ditulis-di-papan-tulis">5.5 Contoh Perhitungan Numerik <em>(siap ditulis di papan tulis)</em></h3>
+<p>Sebuah <em>frame</em> berisi <strong>3 orang</strong> (<em>ground truth</em>). Model menghasilkan<br />
+<strong>3 prediksi</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Prediksi</th>
+<th><em>Confidence</em></th>
+<th>IoU dengan GT</th>
+<th>Kelas</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>0,95</td>
+<td>0,82</td>
+<td>person</td>
+<td>✅ TP (IoU ≥ 0,50)</td>
+</tr>
+<tr>
+<td>B</td>
+<td>0,70</td>
+<td>0,74</td>
+<td>person</td>
+<td>✅ TP</td>
+</tr>
+<tr>
+<td>C</td>
+<td>0,40</td>
+<td>0,00 (di area kosong)</td>
+<td>person</td>
+<td>❌ FP</td>
+</tr>
+<tr>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>GT ke-3 tidak terdeteksi</td>
+<td>❌ FN</td>
+</tr>
+</tbody>
+</table>
+<p>$$<br />
+TP = 2,\quad FP = 1,\quad FN = 1<br />
+$$</p>
+<p>$$<br />
+\mathrm{Precision} = \frac{2}{2+1} = 0{,}667 \qquad<br />
+\mathrm{Recall} = \frac{2}{2+1} = 0{,}667<br />
+$$</p>
+<p>$$<br />
+F_1 = \frac{2 \cdot 0{,}667 \cdot 0{,}667}{0{,}667 + 0{,}667} = 0{,}667<br />
+\qquad<br />
+F_2 = \frac{5 \cdot 0{,}667 \cdot 0{,}667}{4 \cdot 0{,}667 + 0{,}667} = 0{,}667<br />
+$$</p>
+<p>$$<br />
+\mathrm{AP@0.50} = 0{,}667 \qquad<br />
+\mathrm{mAP@0.50:0.95} = 0{,}400<br />
+$$</p>
+<blockquote>
+<p>Angka ini <strong>dapat direproduksi</strong> dengan menjalankan<br />
+<code>python -m src.core.metrics</code> atau sel 4.3 pada notebook.</p>
+</blockquote>
+<h3 id="56-metrik-paling-krusial-agar-penyusup-tidak-lolos-recall">5.6 ⭐ Metrik Paling Krusial agar Penyusup Tidak Lolos: <strong>RECALL</strong></h3>
+<blockquote>
+<p><strong>Jawaban: RECALL</strong> (= <em>True Positive Rate</em> / <em>sensitivity</em>), diukur <strong>pada<br />
+ambang IoU yang longgar (≥ 0,50) dan pada <em>operating point</em> (ambang<br />
+<em>confidence</em>) yang benar-benar dipakai sistem saat berjalan</strong>.</p>
+</blockquote>
+<h4 id="argumen-1-asimetri-biaya-kesalahan">Argumen 1 — Asimetri biaya kesalahan</h4>
+<table>
+<thead>
+<tr>
+<th>Kondisi</th>
+<th>Metrik yang turun</th>
+<th>Akibat</th>
+<th>Biaya</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Penyusup <strong>tidak</strong> terdeteksi</td>
+<td><strong>Recall ↓</strong> (FN ↑)</td>
+<td>pencurian terjadi, <strong>tidak ada rekaman sama sekali</strong></td>
+<td>🔴 <strong>Fatal &amp; permanen</strong></td>
+</tr>
+<tr>
+<td>Alarm palsu (kucing / bayangan)</td>
+<td><strong>Precision ↓</strong> (FP ↑)</td>
+<td>petugas mengecek CCTV beberapa detik</td>
+<td>🟡 Mengganggu, murah</td>
+</tr>
+</tbody>
+</table>
+<p>Secara matematis $\mathrm{Recall} = \dfrac{TP}{TP + FN}$ — <strong>satu-satunya<br />
+metrik yang berbanding terbalik langsung dengan jumlah penyusup yang lolos.</strong><br />
+Jika recall = 0,90, artinya 1 dari 10 penyusup lolos tanpa jejak.</p>
+<h4 id="argumen-2-mengapa-bukan-map-jawaban-yang-sering-salah">Argumen 2 — Mengapa <strong>bukan</strong> mAP (jawaban yang sering salah)</h4>
+<p>mAP adalah rata-rata AP terhadap <strong>seluruh</strong> nilai <em>confidence</em> dan <strong>seluruh</strong><br />
+ambang IoU 0,50–0,95. Padahal sistem nyata hanya berjalan di <strong>satu</strong> nilai<br />
+<em>confidence</em> dan satu ambang IoU. Akibatnya:</p>
+<ul>
+<li>model dengan <strong>mAP@50:95 = 0,85</strong> bisa saja memiliki <strong>recall hanya 0,60</strong><br />
+  pada <em>confidence</em> 0,35 yang dipakai aplikasi → <strong>40% penyusup lolos</strong>;</li>
+<li>mAP juga mencampur kelas <code>car</code> dan <code>truck</code> (berisiko rendah) bersama<br />
+<code>person</code> (berisiko tinggi), sehingga menutupi kelemahan pada kelas yang<br />
+  paling penting.</li>
+</ul>
+<p>Karena itu: <strong>mAP dipakai untuk MEMILIH model pada fase pengembangan, bukan<br />
+untuk MENYETEL sistem yang sedang berjalan.</strong></p>
+<h4 id="argumen-3-mengapa-bukan-precision">Argumen 3 — Mengapa <strong>bukan</strong> Precision</h4>
+<p>Precision rendah menimbulkan <em>alarm fatigue</em> (petugas mengabaikan alarm), yang<br />
+memang berbahaya — tetapi dampaknya <strong>bertahap dan bisa diperbaiki</strong> (tambah<br />
+filter ROI, naikkan ambang). Sedangkan <em>recall</em> rendah berakibat <strong>kehilangan<br />
+bukti secara permanen</strong>. Jadi prioritas: recall <strong>dulu</strong>, precision kemudian.</p>
+<h4 id="strategi-optimasi-recall-yang-konkret">Strategi Optimasi Recall yang Konkret</h4>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Langkah</th>
+<th>Efek</th>
+<th>Risiko yang dikendalikan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Turunkan <code>conf</code> kelas <code>person</code> ke 0,25–0,30</td>
+<td>recall ↑</td>
+<td>precision ↓ → dijaga oleh <em>debounce</em> &amp; ROI</td>
+</tr>
+<tr>
+<td>2</td>
+<td><em>Threshold per kelas</em> (person paling sensitif)</td>
+<td>recall <code>person</code> ↑ tanpa mengorbankan <code>car</code>/<code>truck</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Longgarkan IoU NMS 0,45 → 0,60</td>
+<td>objek berhimpitan (kerumunan) tidak saling menghapus</td>
+<td>kotak ganda sedikit ↑</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Gunakan <strong>F2-score</strong>, bukan F1, saat memilih <em>threshold</em></td>
+<td>keputusan condong ke recall</td>
+<td>—</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Turunkan <code>min_box_area</code> (objek jauh tetap diproses)</td>
+<td>recall jarak jauh ↑</td>
+<td>noise ↑ → dijaga <em>debounce</em></td>
+</tr>
+<tr>
+<td>6</td>
+<td><em>Frame-skip</em> = 1 (proses setiap frame)</td>
+<td>tidak ada momen yang terlewat</td>
+<td>butuh GPU/CPU lebih kuat</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Tambah data <strong>malam hari &amp; oklusi</strong> lalu <em>fine-tune</em></td>
+<td>recall ↑ <strong>tanpa</strong> menurunkan precision</td>
+<td>—</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Tetapkan <strong>SLA metrik</strong>: <code>Recall(person) ≥ 0,95 @ IoU 0,50</code> dengan <code>Precision ≥ 0,70</code></td>
+<td>terukur &amp; bisa diaudit</td>
+<td>—</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>Voting temporal</strong>: objek terdeteksi ≥ 2 dari 3 frame berturut-turut → <em>event</em></td>
+<td>menurunkan FP tanpa mengorbankan recall</td>
+<td>latensi 3 frame</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Ringkasan 1 kalimat untuk ujian:</strong> <em>"mAP dipakai untuk memilih model,<br />
+Precision dijaga agar petugas tidak lelah, tetapi <strong>Recall adalah metrik yang<br />
+paling krusial</strong> karena satu-satunya metrik yang mengukur penyusup yang<br />
+lolos (False Negative) — kegagalan yang pada sistem keamanan bersifat fatal<br />
+dan tidak bisa diulang."</em></p>
+<p><strong>Pelengkap:</strong> setelah recall memadai, pantau <strong>false alarm per hour</strong><br />
+(jumlah FP per jam) sebagai metrik operasional — ini terjemahan praktis dari<br />
+<em>precision</em> yang lebih mudah dipahami operator.</p>
+</blockquote>
+<hr />
+<p><a id="bab-6--perancangan-antarmuka-pengguna-ui"></a></p>
+<h2 id="bab-6-perancangan-antarmuka-pengguna-ui">BAB 6 — PERANCANGAN ANTARMUKA PENGGUNA (UI)</h2>
+<h3 id="menjawab-pertanyaan-4">(Menjawab Pertanyaan 4)</h3>
+<h3 id="61-prinsip-perancangan">6.1 Prinsip Perancangan</h3>
+<table>
+<thead>
+<tr>
+<th>Prinsip</th>
+<th>Penerapan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tema terang (<em>light theme</em>)</strong></td>
+<td>Latar <code>#F4F6FA</code>, kartu putih <code>#FFFFFF</code>, teks gelap <code>#1B2430</code>. Ruangan server/pos satpam lazimnya terang → layar terang lebih nyaman dan tidak menyilaukan</td>
+</tr>
+<tr>
+<td><strong>Hirarki visual jelas</strong></td>
+<td>Video (informasi utama) menempati ~70% lebar; panel status di kanan; kontrol di bawah</td>
+</tr>
+<tr>
+<td><strong>Sinyal status universal</strong></td>
+<td>🟢 hijau = aman, 🟡 kuning = waspada, 🔴 merah berkedip = merekam</td>
+</tr>
+<tr>
+<td><strong>Umpan balik langsung</strong></td>
+<td>Setiap <em>event</em> langsung muncul di log; indikator REC berkedip 2 Hz</td>
+</tr>
+<tr>
+<td><strong>Kontrol minimal &amp; aman</strong></td>
+<td>Tombol besar, <em>slider</em> berlabel nilai, <em>switch</em> eksplisit</td>
+</tr>
+<tr>
+<td><strong>Konsistensi warna kelas</strong></td>
+<td>Warna kotak di video = warna <em>chip</em> di panel kanan (person=hijau, car=biru, truck=merah, motorbike=oranye)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62-palet-warna">6.2 Palet Warna</h3>
+<table>
+<thead>
+<tr>
+<th>Peran</th>
+<th>Kode</th>
+<th>Penggunaan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Latar aplikasi</td>
+<td><code>#F4F6FA</code></td>
+<td><em>background</em> jendela</td>
+</tr>
+<tr>
+<td>Kartu / panel</td>
+<td><code>#FFFFFF</code></td>
+<td>panel status, log</td>
+</tr>
+<tr>
+<td>Batas</td>
+<td><code>#DCE1EA</code></td>
+<td>garis pemisah halus</td>
+</tr>
+<tr>
+<td>Teks utama</td>
+<td><code>#1B2430</code></td>
+<td>label, judul</td>
+</tr>
+<tr>
+<td>Teks sekunder</td>
+<td><code>#6B7688</code></td>
+<td>keterangan</td>
+</tr>
+<tr>
+<td>Aksen primer</td>
+<td><code>#2563EB</code></td>
+<td>tombol utama, nilai penting</td>
+</tr>
+<tr>
+<td>Sukses</td>
+<td><code>#16A34A</code></td>
+<td>status "AMAN", badge LIVE</td>
+</tr>
+<tr>
+<td>Peringatan</td>
+<td><code>#D97706</code></td>
+<td>status "MENDETEKSI"</td>
+</tr>
+<tr>
+<td>Bahaya</td>
+<td><code>#DC2626</code></td>
+<td>status "MEREKAM", indikator REC</td>
+</tr>
+<tr>
+<td>Kelas — person</td>
+<td><code>#20A840</code></td>
+<td>kotak &amp; <em>chip</em></td>
+</tr>
+<tr>
+<td>Kelas — car</td>
+<td><code>#1A76E8</code></td>
+<td>kotak &amp; <em>chip</em></td>
+</tr>
+<tr>
+<td>Kelas — truck</td>
+<td><code>#D63636</code></td>
+<td>kotak &amp; <em>chip</em></td>
+</tr>
+<tr>
+<td>Kelas — motorbike</td>
+<td><code>#E05C18</code></td>
+<td>kotak &amp; <em>chip</em></td>
+</tr>
+</tbody>
+</table>
+<h3 id="63-wireframe-antarmuka">6.3 <em>Wireframe</em> Antarmuka</h3>
+<pre><code>┌────────────────────────────────────────────────────────────────────────────────┐
+│ 🛡 SecureVision   DSEC · Security Camera Application      ● LIVE    20:34:12   │  ← A: Top bar
+├───────────────────────────────────────────────┬────────────────────────────────┤
+│                                               │  STATUS SISTEM                 │
+│                                               │  Model      yolo11n.pt         │
+│                                               │  Kelas aktif person, car, ...  │
+│                                               │  Resolusi   1280 × 720         │
+│            FEED VIDEO REAL-TIME               │  FPS        24.1               │
+│                                               │  Inferensi  12 ms              │
+│         ┌────────────────────┐                │  Total event 7                 │
+│         │  person  0.87      │                ├────────────────────────────────┤
+│         │  ┌──────────┐      │                │  DETEKSI TARGET        3 objek │
+│         │  │ PERSON   │      │                │  ☑ Person     2  ▓▓▓▓░░  2     │
+│         │  └──────────┘      │                │  ☑ Car        1  ▓▓░░░░  1     │
+│         │   ┌────────────┐   │                │  ☑ Truck      0  ░░░░░░  0     │
+│         │   │    CAR     │   │                │  ☑ Motorbike  0  ░░░░░░  0     │
+│         │   └────────────┘   │                ├────────────────────────────────┤
+│         │  IDLE FPS 24 20:34 │  ← HUD         │  PENYIMPANAN                   │
+│         └────────────────────┘                │  runs/capture                  │
+│                                               │  Snapshot 12 · Klip 7          │
+├───────────────────────────────────────────────┼────────────────────────────────┤
+│ ●  MEREKAM — target terdeteksi    REC 00:14   │  LOG KEJADIAN                  │
+│                                     ↑         │  [20:34:12] ⏺ REC_START person │
+│                        B: banner status + REC │  [20:34:12] 📷 SNAPSHOT ...     │
+├───────────────────────────────────────────────┴────────────────────────────────┤
+│  ▶ Start Camera   📷 Snapshot   ⟳ Auto-Record           📁 Folder Output        │  ← D: Kontrol
+│  Confidence ────●──── 0.35    IoU (NMS) ──●──── 0.45    Preset [ balanced ▾ ]   │
+└────────────────────────────────────────────────────────────────────────────────┘
+     ↑ C: panel status, deteksi, log                              (light theme)
+</code></pre>
+<h3 id="64-spesifikasi-komponen">6.4 Spesifikasi Komponen</h3>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Komponen</th>
+<th>Fungsi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A — Top bar</strong></td>
+<td>Judul + sub-judul</td>
+<td>Identitas aplikasi</td>
+</tr>
+<tr>
+<td></td>
+<td>Badge <code>● LIVE</code> / <code>● OFFLINE</code></td>
+<td>Menunjukkan kamera aktif (hijau/abu)</td>
+</tr>
+<tr>
+<td></td>
+<td>Jam digital</td>
+<td><em>Timestamp</em> berjalan</td>
+</tr>
+<tr>
+<td><strong>B — Feed video</strong></td>
+<td>Kanvas video</td>
+<td>Menampilkan <em>frame</em> + kotak + label + HUD (state, FPS, jam)</td>
+</tr>
+<tr>
+<td></td>
+<td>Titik merah berkedip + teks <code>REC</code></td>
+<td><strong>Indikator perekaman otomatis</strong> (2 Hz)</td>
+</tr>
+<tr>
+<td></td>
+<td>Bilah status bawah</td>
+<td>Teks: AMAN / MENDETEKSI / <strong>MEREKAM</strong> / COOLDOWN, disertai warna</td>
+</tr>
+<tr>
+<td></td>
+<td>Timer <code>REC mm:ss</code></td>
+<td>Durasi rekaman berjalan</td>
+</tr>
+<tr>
+<td><strong>C — Panel kanan</strong></td>
+<td>Kartu <em>Status Sistem</em></td>
+<td>Model, kelas aktif, resolusi, FPS, ms inferensi, total event</td>
+</tr>
+<tr>
+<td></td>
+<td>Kartu <em>Deteksi Target</em></td>
+<td><em>Checkbox</em> per kelas (aktif/nonaktif), <em>progress bar</em>, jumlah objek</td>
+</tr>
+<tr>
+<td></td>
+<td>Kartu <em>Penyimpanan</em></td>
+<td>Lokasi folder, jumlah snapshot &amp; klip</td>
+</tr>
+<tr>
+<td></td>
+<td>Kotak <em>Log Kejadian</em></td>
+<td>12 kejadian terakhir berstempel waktu, <em>auto-scroll</em></td>
+</tr>
+<tr>
+<td><strong>D — Kontrol bawah</strong></td>
+<td><code>▶ Start Camera</code> / <code>■ Stop Camera</code></td>
+<td>Memulai/menghentikan akuisisi (merah saat aktif)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>📷 Snapshot</code></td>
+<td>Simpan gambar manual</td>
+</tr>
+<tr>
+<td></td>
+<td><em>Switch</em> <code>Auto-Record</code></td>
+<td>Mengaktifkan/menonaktifkan perekaman otomatis</td>
+</tr>
+<tr>
+<td></td>
+<td><em>Slider</em> <code>Confidence</code></td>
+<td>Mengubah ambang <em>confidence</em> secara <em>live</em></td>
+</tr>
+<tr>
+<td></td>
+<td><em>Slider</em> <code>IoU (NMS)</code></td>
+<td>Mengubah ambang NMS secara <em>live</em></td>
+</tr>
+<tr>
+<td></td>
+<td><em>Dropdown</em> <code>Preset</code></td>
+<td><code>balanced</code> / <code>max_recall</code> / <code>low_false_alarm</code> / <code>fast</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>📁 Folder Output</code></td>
+<td>Membuka lokasi penyimpanan bukti</td>
+</tr>
+</tbody>
+</table>
+<h3 id="65-mockup-antarmuka-bertema-terang">6.5 <em>Mockup</em> Antarmuka (Bertema Terang)</h3>
+<p><img alt="Mockup UI SecureVision" src="./../mockup/ui_mockup_light.png" /></p>
+<p><em>Gambar 6.1 — Mockup antarmuka aplikasi desktop SecureVision, tema terang.<br />
+Kiri: feed video dengan dua objek terdeteksi (<code>PERSON 0.87</code>, <code>CAR 0.72</code>) dan<br />
+bilah HUD. Kiri-bawah: indikator perekaman otomatis (titik merah + <code>REC 00:14</code><br />
++ teks "MEREKAM — target terdeteksi"). Kanan: panel status sistem, deteksi per<br />
+kelas, informasi penyimpanan, dan log kejadian. Bawah: tombol kontrol, switch<br />
+Auto-Record, slider Confidence/IoU, dropdown Preset.</em></p>
+<h3 id="66-alur-interaksi-pengguna">6.6 Alur Interaksi Pengguna</h3>
+<ol>
+<li>Aplikasi dibuka → status <code>● OFFLINE</code>, tombol <code>▶ Start Camera</code> menyala biru.</li>
+<li>Klik <strong>Start</strong> → model dimuat, kamera dibuka → badge menjadi <code>● LIVE</code> hijau.</li>
+<li>Tidak ada target → bilah status hijau <strong>"AMAN — tidak ada target"</strong>.</li>
+<li>Target muncul 3 frame berturut-turut → bilah berubah merah<br />
+<strong>"MEREKAM — target terdeteksi"</strong>, titik REC berkedip, timer berjalan,<br />
+   berkas JPG langsung tersimpan, entri log bertambah.</li>
+<li>Target hilang 4 detik → status <code>COOLDOWN</code>, berkas MP4 ditutup dan tercatat<br />
+   di log.</li>
+<li>Pengguna dapat menyesuaikan Confidence/IoU secara <em>live</em> tanpa menghentikan<br />
+   kamera, atau memilih <em>preset</em> <code>max_recall</code> bila ingin pengawasan maksimal.</li>
+<li>Klik <code>📁 Folder Output</code> → <em>file manager</em> terbuka di <code>runs/capture/</code>.</li>
+</ol>
+<hr />
+<p><a id="bab-7--implementasi--cara-menjalankan"></a></p>
+<h2 id="bab-7-implementasi-cara-menjalankan">BAB 7 — IMPLEMENTASI &amp; CARA MENJALANKAN</h2>
+<h3 id="71-struktur-proyek">7.1 Struktur Proyek</h3>
+<pre><code>DSEC_ets_object_detection/
+├── DSEC_Security_Camera_ETS.ipynb   ⭐ notebook Colab (train + evaluasi + demo)
+├── docs/
+│   └── LAPORAN_Soal2.md             laporan ini
+├── mockup/
+│   └── ui_mockup_light.png          mockup antarmuka tema terang
+├── src/
+│   ├── app.py                       GUI desktop (light theme)
+│   ├── headless.py                  mode tanpa GUI
+│   ├── core/
+│   │   ├── config.py                konfigurasi + preset
+│   │   ├── detector.py              wrapper YOLO + filter kelas
+│   │   ├── recorder.py              ring buffer, MP4, JPG, CSV
+│   │   ├── pipeline.py              state machine pemicu rekaman
+│   │   └── metrics.py               IoU, Precision, Recall, AP, mAP
+├── tests/
+│   └── test_pipeline.py             self-test tanpa model &amp; kamera
+├── tools/
+│   ├── build_notebook.py            generator notebook
+│   └── make_ui_mockup.py            generator mockup UI
+└── requirements.txt
+</code></pre>
+<h3 id="72-kebutuhan-sistem">7.2 Kebutuhan Sistem</h3>
+<pre><code>Python &gt;= 3.9
+ultralytics &gt;= 8.3.0
+opencv-python &gt;= 4.8
+numpy, pillow
+customtkinter            (GUI)
+matplotlib, pandas       (notebook)
+</code></pre>
+<p>Opsional: GPU NVIDIA + CUDA (disarankan; CPU tetap bisa, ~3–6 FPS).</p>
+<h3 id="73-menjalankan-di-google-colab-untuk-ets">7.3 Menjalankan di Google Colab (untuk ETS)</h3>
+<ol>
+<li>Buka <code>DSEC_Security_Camera_ETS.ipynb</code> di Colab.</li>
+<li><code>Runtime → Change runtime type → T4 GPU</code>.</li>
+<li><code>Runtime → Run all</code>.</li>
+<li>Bagian 5 menjalankan <strong>demo webcam <em>live</em> langsung di browser</strong> — tidak<br />
+   perlu instal apa pun di laptop.</li>
+</ol>
+<h3 id="74-menjalankan-aplikasi-desktop">7.4 Menjalankan Aplikasi Desktop</h3>
+<pre><code class="language-bash">git clone https://github.com/zahran-rzq/DSEC_ets_object_detection
+cd DSEC_ets_object_detection
+pip install -r requirements.txt
+
+python -m src.app                             # GUI tema terang, webcam 0
+python -m src.app --source 1                  # webcam kedua
+python -m src.app --weights best.pt           # pakai bobot hasil training
+python -m src.app --preset max_recall         # prioritas recall
+
+python -m src.headless --source 0             # tanpa GUI (mini-PC / Raspberry Pi)
+python -m src.headless --source video.mp4     # proses berkas video
+python -m src.headless --source foto.jpg --save-frame
+
+python -m tests.test_pipeline                 # uji logika tanpa model &amp; kamera
+</code></pre>
+<p>Linux memerlukan paket Tk: <code>sudo apt install python3-tk</code>.</p>
+<hr />
+<p><a id="bab-8--hasil-uji-coba"></a></p>
+<h2 id="bab-8-hasil-uji-coba">BAB 8 — HASIL UJI COBA</h2>
+<p>Pengujian logika dilakukan <strong>tanpa model dan tanpa kamera</strong><br />
+(<code>python -m tests.test_pipeline</code>) memakai <em>MockDetector</em>, sehingga <em>state<br />
+machine</em> dan mekanisme penyimpanan dapat diverifikasi di mesin mana pun.</p>
+<pre><code>============================================================
+   SELF-TEST SECUREVISION (tanpa model, tanpa kamera)
+============================================================
+[1] State machine: IDLE -&gt; DETECTING -&gt; RECORDING -&gt; COOLDOWN
+✅ tanpa objek -&gt; IDLE
+✅ objek konsisten -&gt; RECORDING
+✅ objek hilang -&gt; berhenti merekam
+✅ klip video tersimpan
+✅ snapshot tersimpan
+✅ log CSV terisi
+✅ klip berisi frame (pre-roll masuk)          (21 frame)
+
+[2] Debounce: deteksi 1 frame saja TIDAK memicu rekaman
+✅ flicker 1 frame tidak merekam
+
+[3] Pemetaan kelas target -&gt; id COCO
+✅ ids = [0,2,3,7]
+✅ nama kanonik ['person','car','truck','motorbike']
+✅ alias 'motorcycle'/'MOBIL' dinormalisasi
+
+[4] IoU
+✅ identik = 1.0 | geser 50% = 0.333 | tak bersinggungan = 0
+
+[5] Precision / Recall / mAP
+✅ TP=2, FP=1, FN=1 | Precision = 0.667 | Recall = 0.667
+
+[6] Rotasi klip saat durasi maksimum tercapai
+✅ lebih dari satu klip (rotasi jalan)          (3 klip)
+============================================================
+   HASIL: 19 lulus, 0 gagal
+============================================================
+</code></pre>
+<p>Poin yang terbukti:<br />
+* <strong>Pre-roll bekerja</strong> — klip berisi 21 frame padahal objek baru muncul pada<br />
+  frame ke-16, artinya 5–6 frame sebelum pemicu ikut tersimpan.<br />
+* <strong>Debounce bekerja</strong> — deteksi satu frame tidak menghasilkan berkas apa pun.<br />
+* <strong>Rotasi berkas bekerja</strong> — durasi 60 detik dipaksa menjadi 0,3 detik dan<br />
+  menghasilkan 3 klip terpisah, bukan satu klip raksasa.<br />
+* <strong>Implementasi metrik mandiri</strong> menghasilkan angka yang valid dan konsisten<br />
+  dengan definisi (IoU 1,000 / 0,333 / 0,000; P = R = 0,667).</p>
+<hr />
+<p><a id="bab-9--pembahasan-keterbatasan--pengembangan"></a></p>
+<h2 id="bab-9-pembahasan-keterbatasan-pengembangan">BAB 9 — PEMBAHASAN, KETERBATASAN &amp; PENGEMBANGAN</h2>
+<h3 id="91-keterbatasan">9.1 Keterbatasan</h3>
+<table>
+<thead>
+<tr>
+<th>Keterbatasan</th>
+<th>Dampak</th>
+<th>Mitigasi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Deteksi berbasis penampakan visual</td>
+<td>Sulit pada malam hari tanpa IR, kabut, hujan deras</td>
+<td>Kamera IR / <em>low-light enhancement</em> (CLAHE) sebelum inferensi</td>
+</tr>
+<tr>
+<td>Objek sangat kecil (&lt; 20 px)</td>
+<td>Recall menurun</td>
+<td>Naikkan <code>IMG_SIZE</code> ke 960–1280, atau <em>tiling</em> (potong <em>frame</em> menjadi ubin)</td>
+</tr>
+<tr>
+<td>Oklusi berat</td>
+<td>Objek tertutup tidak terdeteksi</td>
+<td>Pelacakan (<em>ByteTrack</em>) + <em>post-roll</em> panjang</td>
+</tr>
+<tr>
+<td>Kelas <code>truck</code> vs <code>bus</code></td>
+<td>Bisa tertukar</td>
+<td><code>bus</code> memang tidak termasuk target, jadi otomatis dibuang oleh <code>classes=</code></td>
+</tr>
+<tr>
+<td>CPU tanpa GPU</td>
+<td>~3–6 FPS</td>
+<td><code>IMG_SIZE=416</code>, <code>frame_skip=2</code>, ekspor ONNX/FP16</td>
+</tr>
+<tr>
+<td>Tidak mengenali identitas</td>
+<td>Hanya tahu "ada orang"</td>
+<td>Tambahkan ReID / pengenalan wajah sebagai tahap lanjut</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92-usulan-pengembangan">9.2 Usulan Pengembangan</h3>
+<ol>
+<li><strong>Pelacakan multi-objek (ByteTrack)</strong> — mengenali bahwa orang di frame 1 dan<br />
+   frame 2 adalah <strong>objek yang sama</strong>, sehingga dapat dihitung <em>dwell time</em><br />
+   (berapa lama seseorang berada di area) dan arah gerak.</li>
+<li><strong>Zona &amp; garis maya</strong> — ROI berbentuk poligon, plus deteksi "garis terlewati"<br />
+   (<em>line crossing</em>) untuk mendeteksi arah masuk/keluar.</li>
+<li><strong>Notifikasi <em>real-time</em></strong> — Telegram/WhatsAppBot/email berisi <em>thumbnail</em><br />
+   saat <em>event</em> terjadi.</li>
+<li><strong>Penyimpanan cerdas</strong> — hapus otomatis klip tanpa <em>event</em> setelah <em>N</em> hari;<br />
+   kompres H.265.</li>
+<li><strong>Dasbor analitik</strong> — grafik jumlah <em>event</em> per jam/hari, peta panas posisi<br />
+   deteksi.</li>
+<li><strong>Optimasi <em>edge</em></strong> — ekspor ONNX → TensorRT/INT8 agar bisa berjalan 30 FPS<br />
+   di Jetson Nano atau Raspberry Pi + Hailo.</li>
+<li><strong>Aktif <em>active learning</em></strong> — tombol "tandai salah" pada GUI → gambar<br />
+   masuk ke antrian <em>re-training</em> berkala.</li>
+</ol>
+<h3 id="93-pertimbangan-etis">9.3 Pertimbangan Etis</h3>
+<p>Sistem pengawasan memproses data pribadi. Beberapa hal yang perlu diperhatikan:<br />
+pemberitahuan/penandaan area ("Area Dilindungi CCTV"), enkripsi dan pembatasan<br />
+retensi rekaman, kontrol akses log, serta kepatuhan pada regulasi perlindungan<br />
+data yang berlaku. Rekaman hendaknya hanya dipakai untuk tujuan keamanan yang<br />
+sah.</p>
+<hr />
+<p><a id="bab-10--penutup--daftar-pustaka"></a></p>
+<h2 id="bab-10-penutup-daftar-pustaka">BAB 10 — PENUTUP &amp; DAFTAR PUSTAKA</h2>
+<h3 id="101-kesimpulan">10.1 Kesimpulan</h3>
+<ol>
+<li><strong>Arsitektur</strong> — YOLOv11-nano (<em>single-stage</em>) dipilih karena latensi<br />
+   ~8–12 ms/frame (real-time) dengan akurasi setara <em>two-stage detector</em>.<br />
+   Pembatasan pada 4 kelas dilakukan bertingkat: <code>classes=[0,2,3,7]</code> di level<br />
+   model, ambang <em>confidence</em> per kelas, lalu filter luas kotak/ROI di level<br />
+   aplikasi.</li>
+<li><strong>Alur kerja</strong> — <code>cap.read()</code> → <em>ring buffer</em> (pre-roll) → <em>letterbox</em> 640<br />
+   → <em>forward pass</em> → NMS → filter kelas/conf/ROI → <em>debounce</em> 3 frame →<br />
+<strong>kondisi pemicu</strong> → simpan JPG + rekam MP4 (pre 3 s / post 4 s) →<br />
+   berhenti &amp; catat ke <code>events.csv</code>, dengan rotasi berkas tiap 60 detik dan<br />
+   jeda 5 detik antar <em>event</em>.</li>
+<li><strong>Metrik</strong> — IoU menentukan TP/FP; Precision = TP/(TP+FP);<br />
+   Recall = TP/(TP+FN); AP = luas kurva PR; mAP = rata-rata AP seluruh kelas.<br />
+<strong>Metrik paling krusial adalah RECALL</strong>, karena berbanding terbalik langsung<br />
+   dengan jumlah penyusup yang lolos (<em>False Negative</em>) — kegagalan yang pada<br />
+   sistem keamanan bersifat fatal dan tidak dapat diulang. mAP digunakan untuk<br />
+   memilih model, sedangkan Precision dijaga melalui ROI, <em>debounce</em>, dan<br />
+<em>threshold</em> per kelas agar petugas tidak mengalami <em>alarm fatigue</em>.</li>
+<li><strong>Antarmuka</strong> — tema terang dengan empat area: <em>top bar</em> (identitas + badge<br />
+   LIVE + jam), <em>feed</em> video (kotak berwarna per kelas + HUD + titik REC<br />
+   berkedip), panel kanan (status, deteksi per kelas, penyimpanan, log), dan<br />
+   baris kontrol (Start/Stop, Snapshot, Auto-Record, <em>slider</em> Confidence &amp; IoU,<br />
+<em>preset</em>, Folder Output).</li>
+</ol>
+<h3 id="102-daftar-pustaka">10.2 Daftar Pustaka</h3>
+<ol>
+<li>Redmon, J., Divvala, S., Girshick, R., &amp; Farhadi, A. (2016). <em>You Only Look<br />
+   Once: Unified, Real-Time Object Detection</em>. <strong>CVPR 2016</strong>.<br />
+   https://arxiv.org/abs/1506.02640</li>
+<li>Ultralytics. (2024). <em>Ultralytics YOLO11 Documentation</em>.<br />
+   https://docs.ultralytics.com/models/yolo11/</li>
+<li>Lin, T.-Y., et al. (2014). <em>Microsoft COCO: Common Objects in Context</em>.<br />
+<strong>ECCV 2014</strong>. https://arxiv.org/abs/1405.0312</li>
+<li>Everingham, M., et al. (2010). <em>The PASCAL Visual Object Classes (VOC)<br />
+   Challenge</em>. <strong>IJCV 88(2)</strong>. — definisi AP metode 11 titik.</li>
+<li>Ren, S., He, K., Girshick, R., &amp; Sun, J. (2015). <em>Faster R-CNN: Towards<br />
+   Real-Time Object Detection with Region Proposal Networks</em>. <strong>NeurIPS 2015</strong>.<br />
+   https://arxiv.org/abs/1506.01497</li>
+<li>Zhang, Y., et al. (2022). <em>ByteTrack: Multi-Object Tracking by Associating<br />
+   Every Detection Box</em>. <strong>ECCV 2022</strong>. https://arxiv.org/abs/2110.06864</li>
+<li>Padilla, R., Netto, S. L., &amp; Da Silva, E. A. B. (2020). <em>A Survey on<br />
+   Performance Metrics for Object-Detection Algorithms</em>. <strong>IJCNN 2020</strong>.<br />
+   https://arxiv.org/abs/2007.12107</li>
+<li>Bradski, G. (2000). <em>The OpenCV Library</em>. <strong>Dr. Dobb's Journal</strong>.<br />
+   https://opencv.org/</li>
+<li>Ultralytics. (2024). <em>YOLOv8/YOLO11 — <code>model.predict(classes=[...])</code> Argument<br />
+   Reference</em>. https://docs.ultralytics.com/modes/predict/</li>
+</ol>
+<hr />
+<h2 id="lampiran-potongan-kode-inti">LAMPIRAN — Potongan Kode Inti</h2>
+<h3 id="a-inisialisasi-model-panggilan-inferensi-srccoredetectorpy">A. Inisialisasi model &amp; panggilan inferensi (<code>src/core/detector.py</code>)</h3>
+<pre><code class="language-python">preds = self.model.predict(
+    frame,
+    imgsz=self.cfg.imgsz,
+    conf=self._effective_conf,      # ambang terendah; disaring ulang per kelas
+    iou=self.cfg.iou,               # IoU threshold NMS
+    classes=self.class_ids,         # &lt;-- [0, 2, 3, 7] hanya 4 kelas target
+    device=self.cfg.device or None,
+    verbose=False,
+    persist=True,                   # diperlukan bila tracker aktif
+)
+</code></pre>
+<h3 id="b-pemicu-rekaman-srccorepipelinepy">B. Pemicu rekaman (<code>src/core/pipeline.py</code>)</h3>
+<pre><code class="language-python">enough_streak = self.streak &gt;= cfg.trigger.min_consecutive_frames     # 3
+cooled_down   = (now - self.last_stop_time) &gt;= cfg.trigger.cooldown_seconds  # 5s
+
+if enough_streak and cooled_down and not self.recorder.is_recording:
+    recorder.start(size, fps, pre_roll=self.buffer.snapshot())       # pre-roll
+    snapper.save(annotated_frame)                                    # JPG
+    logger.log(&quot;REC_START&quot;, classes, conf, n)
+</code></pre>
+<h3 id="c-menggunakan-model-di-luar-repo-cuplikan-minimal-30-baris">C. Menggunakan model di luar repo (cuplikan minimal 30 baris)</h3>
+<pre><code class="language-python">import cv2
+from ultralytics import YOLO
+
+CLASSES = [0, 2, 3, 7]                 # person, car, motorcycle, truck
+NAMES   = {0: &quot;person&quot;, 2: &quot;car&quot;, 3: &quot;motorbike&quot;, 7: &quot;truck&quot;}
+
+model = YOLO(&quot;yolo11n.pt&quot;)
+cap   = cv2.VideoCapture(0)
+
+while True:
+    ok, frame = cap.read()
+    if not ok:
+        break
+    for r in model.predict(frame, imgsz=640, conf=0.35,
+                           classes=CLASSES, verbose=False):
+        for b in r.boxes:
+            x1, y1, x2, y2 = map(int, b.xyxy[0])
+            name = NAMES[int(b.cls)]
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 200, 0), 2)
+            cv2.putText(frame, f&quot;{name} {float(b.conf):.2f}&quot;, (x1, y1 - 6),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 200, 0), 2)
+    cv2.imshow(&quot;SecureVision&quot;, frame)
+    if cv2.waitKey(1) == ord(&quot;q&quot;):
+        break
+cap.release(); cv2.destroyAllWindows()
+</code></pre>
+<hr />
+<p><em>Laporan ini disusun sebagai bagian dari jawaban Soal 2 ETS — mata kuliah Deep<br />
+Learning for Security (DSEC). Seluruh kode pendukung tersedia di repositori<br />
+<code>zahran-rzq/DSEC_ets_object_detection</code>, dan seluruh eksperimen dapat dijalankan<br />
+ulang melalui <code>DSEC_Security_Camera_ETS.ipynb</code> di Google Colab.</em></p>
+</body>
+</html>
