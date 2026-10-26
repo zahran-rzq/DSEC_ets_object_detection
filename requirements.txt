@@ -5,6 +5,9 @@
 
 # --- inti (wajib) ---
 ultralytics>=8.3.0        # YOLO pre-trained (YOLOv11 / YOLOv8)
+# Disarankan OpenCV 4.x (Ultralytics resmi diuji pada 4.x).
+# OpenCV 5.x juga didukung (kode sudah tahan beda API), tapi bila
+# muncul error aneh saat inferensi: pip install "opencv-python>=4.8,<5.0"
 opencv-python>=4.8.0      # akuisisi webcam, anotasi, penulisan video
 numpy>=1.23
 pillow>=9.5               # konversi frame -> gambar untuk GUI

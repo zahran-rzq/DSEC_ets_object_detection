@@ -32,6 +32,17 @@ except ImportError:  # pragma: no cover
     cv2 = None
 
 
+def _fourcc(code: str) -> int:
+    """FourCC yang tahan terhadap perbedaan OpenCV 4.x / 5.x."""
+    f = getattr(cv2, "VideoWriter_fourcc", None)
+    if callable(f):
+        return f(*code)
+    f = getattr(getattr(cv2, "VideoWriter", None), "fourcc", None)
+    if callable(f):
+        return f(*code)
+    return 0
+
+
 def _stamp() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -118,7 +129,7 @@ class VideoRecorder:
             return self._current.path
         h, w = int(size[1]), int(size[0])
         fname = self.out_dir / f"rec_{_stamp()}_{len(self.history) + 1:04d}.mp4"
-        fourcc = cv2.VideoWriter_fourcc(*self.fourcc) if cv2 is not None else 0
+        fourcc = _fourcc(self.fourcc)
         self._writer = cv2.VideoWriter(str(fname), fourcc, fps, (w, h)) if cv2 else None
         self._current = RecordedClip(path=fname, started_at=datetime.now(),
                                      trigger=trigger)
@@ -174,7 +185,8 @@ class SnapshotWriter:
         name = f"snap_{_stamp()}{'_' + tag if tag else ''}.jpg"
         p = self.out_dir / name
         if cv2 is not None:
-            cv2.imwrite(str(p), frame, [int(cv2.IMWRITE_JPEG_QUALITY), self.quality])
+            cv2.imwrite(str(p), frame,
+                       [int(getattr(cv2, "IMWRITE_JPEG_QUALITY", 1)), self.quality])
         else:  # pragma: no cover
             from PIL import Image
             Image.fromarray(frame[..., ::-1]).save(p, quality=self.quality)

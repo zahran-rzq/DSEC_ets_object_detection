@@ -112,6 +112,7 @@ masuk. Penyebabnya hampir selalu salah satu dari berikut:
 | 4 | Resolusi 1280×720 tidak didukung | Turunkan: edit `cfg.camera.width/height` atau pakai preset `fast` (`--preset fast` → 640×480) |
 | 5 | Salah indeks kamera (mis. kamera virtual OBS/DroidCam di indeks 0) | Klik **Tes** untuk melihat indeks yang benar, lalu pilih di dropdown **Sumber kamera** |
 | 6 | Terpasang `opencv-python-headless` | `pip uninstall opencv-python-headless && pip install opencv-python` |
+| 7 | OpenCV 5.x (Ultralytics resmi diuji di 4.x) | Kode sudah kompatibel; bila muncul error aneh saat inferensi: `pip install "opencv-python>=4.8,<5.0"` |
 
 **Pemindaian kamera dari terminal:**
 

@@ -93,11 +93,11 @@ def _try_open(source, backend_id, backend_name, width, height, fps,
     if is_cam:
         try:
             if width:
-                cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(width))
+                cap.set(getattr(cv2, "CAP_PROP_FRAME_WIDTH", 3), int(width))
             if height:
-                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(height))
+                cap.set(getattr(cv2, "CAP_PROP_FRAME_HEIGHT", 4), int(height))
             if fps:
-                cap.set(cv2.CAP_PROP_FPS, int(fps))
+                cap.set(getattr(cv2, "CAP_PROP_FPS", 5), int(fps))
         except Exception:
             pass
 
@@ -105,9 +105,9 @@ def _try_open(source, backend_id, backend_name, width, height, fps,
     for _ in range(max(1, warmup_attempts)):
         ok, frame = cap.read()
         if ok and frame is not None and getattr(frame, "size", 0) > 0:
-            h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or (frame.shape[0] if frame is not None else 0))
-            w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or (frame.shape[1] if frame is not None else 0))
-            f = cap.get(cv2.CAP_PROP_FPS) or 0
+            h = int(cap.get(getattr(cv2, "CAP_PROP_FRAME_HEIGHT", 4)) or frame.shape[0])
+            w = int(cap.get(getattr(cv2, "CAP_PROP_FRAME_WIDTH", 3)) or frame.shape[1])
+            f = cap.get(getattr(cv2, "CAP_PROP_FPS", 5)) or 0
             info = {
                 "backend": backend_name,
                 "width": w or (frame.shape[1] if frame is not None else 0),
@@ -122,18 +122,57 @@ def _try_open(source, backend_id, backend_name, width, height, fps,
     return None, None, None
 
 
+def _log_api():
+    """
+    Temukan API pengatur level log OpenCV yang tersedia.
+
+        OpenCV 4.x : cv2.setLogLevel(level)
+        OpenCV 5.x : cv2.utils.logging.setLogLevel(level)  (+ getLogLevel)
+
+    Return: (setter, getter, level_error). setter bisa None bila tidak ada.
+    """
+    if cv2 is None:
+        return None, None, 3
+    setter = getattr(cv2, "setLogLevel", None)
+    getter, level_error = None, 3
+    if not callable(setter):
+        mod = getattr(getattr(cv2, "utils", None), "logging", None)
+        setter = getattr(mod, "setLogLevel", None)
+        getter = getattr(mod, "getLogLevel", None)
+        level_error = getattr(mod, "LOG_LEVEL_ERROR", 3)
+    if not callable(setter):
+        return None, None, 3
+    return setter, getter, int(level_error)
+
+
 class _QuietOpenCV:
-    """Sementara menaikkan level log OpenCV agar pemindaian tidak berisik."""
+    """
+    Sementara menaikkan level log OpenCV agar pemindaian kamera tidak berisik.
+
+    Sepenuhnya defensif: bila API logging tidak tersedia (beda versi OpenCV),
+    kelas ini menjadi no-op dan TIDAK pernah melempar exception — bug versi
+    sebelumnya justru menghentikan seluruh pemindaian pada OpenCV 5.
+    """
 
     def __enter__(self):
-        self.prev = cv2.setLogLevel(0) if cv2 is not None else 0
-        if cv2 is not None:
-            cv2.setLogLevel(3)      # LOG_LEVEL_ERROR
+        self._setter, self._prev = None, None
+        try:
+            setter, getter, level_error = _log_api()
+            if setter is None:
+                return self
+            self._prev = int(getter()) if callable(getter) else None
+            setter(level_error)
+            self._setter = setter
+        except Exception:
+            self._setter, self._prev = None, None      # gagal -> diam saja
         return self
 
     def __exit__(self, *a):
-        if cv2 is not None:
-            cv2.setLogLevel(self.prev)
+        try:
+            if self._setter is not None and self._prev is not None:
+                self._setter(self._prev)
+        except Exception:
+            pass
         return False
 
 
@@ -342,6 +381,14 @@ def main() -> int:
     print("Backend yang akan dicoba:",
           ", ".join(n for n, _ in _candidate_backends()))
     print("-" * 66)
+    try:                       # kompatibilitas OpenCV vs Ultralytics
+        if int((cv2.__version__ or "4").split(".")[0]) >= 5:
+            print("⚠️  OpenCV 5.x terdeteksi. Ultralytics resmi diuji pada OpenCV 4.x.")
+            print("   Bila nanti muncul error aneh saat inferensi, turunkan:")
+            print("     pip install \"opencv-python>=4.8,<5.0\"")
+            print("-" * 66)
+    except Exception:
+        pass
 
     found = probe_cameras(max_index=5)
     if not found:
