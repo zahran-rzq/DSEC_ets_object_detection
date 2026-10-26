@@ -17,6 +17,112 @@ from pathlib import Path
 
 CELLS: list[tuple[str, str]] = []
 
+GUARD = r"""
+# --- ⚙️ GUARD: otomatis mengisi nilai default bila sel konfigurasi belum dijalankan ---
+try:
+    import torch as _t
+    _dev = 0 if _t.cuda.is_available() else "cpu"
+except Exception:
+    _dev = "cpu"
+from pathlib import Path as _P
+_wd = _P("/content/securevision")
+try:
+    _wd.mkdir(parents=True, exist_ok=True)
+except Exception:
+    _wd = _P.cwd()
+for _k, _v in dict(
+    WEIGHTS="yolo11n.pt", IMG_SIZE=640, CONF=0.35, IOU_NMS=0.45, DEVICE=_dev,
+    SKIP_TRAINING=False, DATASET_OPTION="A", DATA_YAML=None,
+    EPOCHS=20, BATCH=16, PATIENCE=10, FREEZE=10,
+    TARGET_CLASSES=["person", "car", "truck", "motorbike"],
+    TARGET_IDS=[0, 2, 3, 7],
+    COCO_CLASS_IDS={"person": 0, "car": 2, "motorbike": 3, "truck": 7},
+    PER_CLASS_CONF={"person": 0.30, "car": 0.40, "truck": 0.40, "motorbike": 0.35},
+    CLASS_COLORS={"person": "#20A840", "car": "#1A76E8",
+                  "truck": "#D63636", "motorbike": "#E05C18"},
+    WORKDIR=_wd,
+).items():
+    globals().setdefault(_k, _v)
+globals().setdefault("Path", _P)
+try:
+    import numpy as np
+except Exception:
+    pass
+try:
+    import pandas as pd
+except Exception:
+    pass
+try:
+    from tqdm.auto import tqdm
+except Exception:
+    def tqdm(x, **k):
+        return x
+try:
+    model
+except NameError:
+    from ultralytics import YOLO
+    model = YOLO(WEIGHTS)
+# --- akhir guard -------------------------------------------------------------
+"""
+
+DATA_HELPERS = r"""
+# --- helper data validasi (aman bila sel 4.4 belum dijalankan) ---------------
+try:
+    from ultralytics.utils.checks import check_file as _check_file
+except Exception:
+    def _check_file(p, *a, **k):
+        return p
+
+def _resolve_yaml(p):
+    # temukan berkas .yaml (mendukung nama bawaan seperti 'coco8.yaml')
+    try:
+        return Path(str(_check_file(str(p))))
+    except Exception:
+        return Path(str(p))
+
+def yolo_to_xyxy(line, w, h):
+    c, cx, cy, bw, bh = line.split()[:5]
+    cx, cy, bw, bh = float(cx) * w, float(cy) * h, float(bw) * w, float(bh) * h
+    return [cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2]
+
+def load_split(root, split="valid"):
+    root = Path(root)
+    img_dir = next((p for p in [root / split / "images",
+                                root / "images" / split] if p.is_dir()), None)
+    lbl_dir = next((p for p in [root / split / "labels",
+                                root / "labels" / split] if p.is_dir()), None)
+    if img_dir is None or lbl_dir is None:
+        return []
+    items = []
+    for ip in sorted(img_dir.glob("*")):
+        if ip.suffix.lower() not in (".jpg", ".jpeg", ".png", ".bmp"):
+            continue
+        lp = lbl_dir / (ip.stem + ".txt")
+        items.append((str(ip), str(lp) if lp.exists() else None))
+    return items
+# --- akhir helper data -------------------------------------------------------
+"""
+
+SAMPLE_HELPERS = r"""
+# --- helper: pastikan gambar contoh tersedia --------------------------------
+try:
+    img_bgr
+except NameError:
+    import cv2 as _cv
+    import urllib.request as _u
+    import numpy as _np
+    SAMPLE = Path("sample.jpg")
+    if not SAMPLE.exists():
+        try:
+            _u.urlretrieve("https://ultralytics.com/images/bus.jpg", str(SAMPLE))
+        except Exception:
+            _cv.imwrite(str(SAMPLE), _np.full((480, 640, 3), 60, _np.uint8))
+    img_bgr = _cv.imread(str(SAMPLE))
+    print("📌 Gambar contoh dimuat otomatis:", SAMPLE)
+# --- akhir helper gambar ------------------------------------------------------
+"""
+
+
 
 def md(src: str) -> None:
     CELLS.append(("markdown", src.strip("\n")))
@@ -60,6 +166,13 @@ md(r"""
 > bobot pre-trained COCO (`yolo11n.pt`) + filter kelas. Bagian training
 > memakai `coco8.yaml` (8 gambar) hanya sebagai **smoke test** agar seluruh
 > pipeline terbukti berjalan; ganti dengan datasetmu di `Bagian 2` bila perlu.
+
+> **Boleh lompat-lompat sel.** Setiap sel kode sudah dilengkapi *guard* yang
+> otomatis mengisi nilai default (`SKIP_TRAINING`, `DATA_YAML`, `IMG_SIZE`,
+> `TARGET_IDS`, `model`, gambar contoh, fungsi metrik, dll.) bila sel
+> konfigurasi belum dijalankan — jadi **tidak akan muncul `NameError`**.
+> Untuk mengubah nilainya, jalankan sel **1.1** (konfigurasi model) dan
+> **2.1** (konfigurasi dataset/training).
 
 ---
 
@@ -245,6 +358,7 @@ print("=" * 66)
 """)
 
 code(r"""
+# @guard
 # @title 1.2 Muat model + demonstrasi "tanpa filter" vs "dengan filter"
 from ultralytics import YOLO
 import urllib.request, numpy as np, cv2
@@ -274,6 +388,7 @@ print("Ukuran gambar:", img_bgr.shape[1], "x", img_bgr.shape[0])
 """)
 
 code(r"""
+# @guard-img
 # @title 1.3 Jalankan inferensi: SEMUA kelas vs HANYA 4 kelas target
 def run(classes=None, conf=CONF):
     return model.predict(img_bgr, imgsz=IMG_SIZE, conf=conf, iou=IOU_NMS,
@@ -312,6 +427,7 @@ plt.tight_layout(); plt.show()
 """)
 
 code(r"""
+# @guard-img
 # @title 1.4 Implementasi filter kelas + confidence per-kelas di level aplikasi
 def detect_targets(frame_bgr, model, classes=TARGET_IDS, per_class_conf=PER_CLASS_CONF,
                    conf=CONF, iou=IOU_NMS, imgsz=IMG_SIZE, min_area=900):
@@ -476,6 +592,7 @@ def write_data_yaml(root: Path, class_names=CUSTOM_CLASSES) -> Path:
 """)
 
 code(r"""
+# @guard
 # @title 2.3 Siapkan dataset sesuai opsi yang dipilih
 DATA_YAML = None
 
@@ -531,10 +648,14 @@ Strategi yang dipakai di sini:
 """)
 
 code(r"""
+# @guard
 # @title 3.1 Jalankan training
 if SKIP_TRAINING:
     print("⏭️  dilewati")
 else:
+    if DATA_YAML is None:
+        DATA_YAML = "coco8.yaml"
+        print("📌 DATA_YAML belum diisi (sel 2.3 belum dijalankan) -> pakai coco8.yaml")
     train_args = dict(
         data=DATA_YAML,
         epochs=EPOCHS,
@@ -561,6 +682,7 @@ else:
 """)
 
 code(r"""
+# @guard
 # @title 3.2 Tampilkan kurva training
 from IPython.display import Image as IPyImage, display
 import glob
@@ -610,8 +732,12 @@ kelas. **mAP** = rata-rata AP seluruh kelas.
 """)
 
 code(r"""
+# @guard
 # @title 4.1 Evaluasi dengan Ultralytics (`model.val()`)
-metrics = model.val(data=DATA_YAML if not SKIP_TRAINING else None,
+_val_data = DATA_YAML or "coco8.yaml"
+if DATA_YAML is None:
+    print("📌 DATA_YAML belum diisi -> memakai coco8.yaml untuk validasi")
+metrics = model.val(data=_val_data,
                     imgsz=IMG_SIZE, conf=0.001, iou=0.6,
                     device=DEVICE, split="val", plots=True, verbose=False)
 
@@ -742,6 +868,7 @@ print("   pr_curve, average_precision, mean_average_precision")
 """)
 
 code(r"""
+# @guard-metrics
 # @title 4.3 Uji pemahaman metrik pada kasus MAINAN (bisa dijelaskan ke dosen)
 import matplotlib.pyplot as plt
 
@@ -794,6 +921,7 @@ karena detail implementasi NMS/interpolasi).
 """)
 
 code(r"""
+# @guard-data
 # @title 4.4 mAP manual pada data validasi
 from pathlib import Path
 
@@ -819,11 +947,13 @@ def load_split(root: Path, split="valid"):
 def compute_map_manual(model, data_yaml, split="valid", conf=0.001, iou_nms=0.6,
                        class_ids=(0,1,2,3), max_images=None):
     import cv2, yaml
-    cfg = yaml.safe_load(Path(data_yaml).read_text())
+    cfg = yaml.safe_load(_resolve_yaml(data_yaml).read_text())
     root = Path(cfg["path"])
     items = load_split(root, split)
     if not items:
-        print("Split tidak ditemukan:", split); return None
+        print(f"Split '{split}' tidak ditemukan pada {root}.")
+        print("-> Untuk coco8, jalankan sel 4.1 (model.val) sekali agar dataset terunduh.")
+        return None
     if max_images: items = items[:max_images]
 
     GT_B, GT_C, PB, PS, PC = [], [], [], [], []
@@ -863,17 +993,19 @@ def compute_map_manual(model, data_yaml, split="valid", conf=0.001, iou_nms=0.6,
                 "n_gt": len(GB), "n_pred": len(FB), "n_images": len(items)})
     return res
 
-if SKIP_TRAINING or DATA_YAML is None:
-    print("⏭️  Tidak ada dataset validasi (melewati).")
-    print("   Jalankan dengan DATASET_OPTION='A'/'B'/'C' untuk melihat angka ini.")
-else:
-    manual = compute_map_manual(model, DATA_YAML, split="valid", max_images=None)
+_yaml = DATA_YAML or "coco8.yaml"
+if DATA_YAML is None:
+    print("📌 DATA_YAML belum diisi -> memakai coco8.yaml (jalankan sel 2.3 untuk datasetmu)")
+manual = compute_map_manual(model, _yaml, split="valid", max_images=None)
+if manual:
     print("\n" + "=" * 58)
     print("   mAP DIHITUNG MANUAL (implementasi sendiri)")
     print("=" * 58)
     for k, v in manual.items():
         print(f"  {k:<15}: {v:.4f}" if isinstance(v, float) else f"  {k:<15}: {v}")
     print("=" * 58)
+else:
+    print("⏭️  Tidak ada data validasi yang bisa dievaluasi.")
 """)
 
 md(r"""
@@ -920,15 +1052,16 @@ membuat petugas lelah (*alarm fatigue*) — dampaknya lambat, bukan fatal.
 """)
 
 code(r"""
+# @guard-full
 # @title 4.5 Threshold sweep — memilih confidence threshold terbaik (maksimalkan F2)
 import matplotlib.pyplot as plt
 
 def sweep(model, data_yaml, split="valid", class_ids=(0,1,2,3), max_images=60):
     import cv2, yaml
-    cfg = yaml.safe_load(Path(data_yaml).read_text())
+    cfg = yaml.safe_load(_resolve_yaml(data_yaml).read_text())
     items = load_split(Path(cfg["path"]), split)[:max_images]
     if not items:
-        print("Split validasi kosong."); return None
+        print("Split validasi kosong."); return None, None
     # kumpulkan prediksi sekali pada conf sangat rendah, lalu sweep secara analitik
     FB, FS, FC, GB, GC = [], [], [], [], []
     for ip, lp in tqdm(items, desc="kumpulkan prediksi", leave=False):
@@ -959,10 +1092,13 @@ def sweep(model, data_yaml, split="valid", class_ids=(0,1,2,3), max_images=60):
                      "fp": fp, "fn": fn})
     return rows, (GB, GC, FB, FS, FC)
 
-if SKIP_TRAINING or DATA_YAML is None:
-    print("⏭️  Butuh dataset validasi untuk sweep (atur DATASET_OPTION).")
+_yaml = DATA_YAML or "coco8.yaml"
+if DATA_YAML is None:
+    print("📌 DATA_YAML belum diisi -> memakai coco8.yaml (jalankan sel 2.3 untuk datasetmu)")
+rows, bundle = sweep(model, _yaml)
+if not rows:
+    print("⏭️  Tidak ada data validasi untuk sweep.")
 else:
-    rows, bundle = sweep(model, DATA_YAML)
     df = pd.DataFrame(rows)
     best_f2 = df.loc[df.f2.idxmax()]
     best_f1 = df.loc[df.f1.idxmax()]
@@ -1021,6 +1157,7 @@ muncul, ulangi: `Runtime → Restart runtime`, lalu jalankan ulang sel ini.
 """)
 
 code(r"""
+# @guard
 # @title 5.1 Webcam live detection di browser
 from IPython.display import display, Javascript, Image as IPyImage
 from google.colab.output import eval_js
@@ -1104,6 +1241,7 @@ video_stream(seconds=10)
 """)
 
 code(r"""
+# @guard
 # @title 5.2 (Alternatif) Deteksi pada file video yang di-upload
 from google.colab import files
 import cv2, os
@@ -1145,6 +1283,7 @@ md(r"""
 """)
 
 code(r"""
+# @guard
 # @title 6.1 Ekspor model & arsipkan seluruh hasil
 EXPORT_ONNX = True
 best = WORKDIR / "runs" / "detect" / "train" / "weights" / "best.pt"
@@ -1154,6 +1293,9 @@ if best.exists():
     if EXPORT_ONNX:
         onnx = model.export(format="onnx", imgsz=IMG_SIZE, dynamic=True, simplify=True)
         print("ONNX:", onnx)
+
+if not best.exists() and not (WORKDIR / "runs" / "detect" / "train").exists():
+    print("ℹ️  Belum ada hasil training — lewati ekspor. (Jalankan Bagian 3 dulu.)")
 
 # arsipkan
 import shutil, zipfile
@@ -1178,6 +1320,7 @@ except Exception as e:
 """)
 
 code(r"""
+# @guard
 # @title 6.2 Simpan laporan metrik ke CSV/JSON (bisa ditempel di laporan ETS)
 import json, pandas as pd
 
@@ -1261,6 +1404,7 @@ python -m src.headless --source 0      # tanpa GUI
 """)
 
 code(r"""
+# @guard
 # @title 7.1 Selesai — ringkasan akhir
 print("=" * 62)
 print("  ✅ SELESAI — SecureVision DSEC ETS")
@@ -1279,7 +1423,20 @@ print("=" * 62)
 """)
 
 # ===========================================================================
+def _metric_block() -> str:
+    """Ambil definisi fungsi metrik dari sel 4.2 supaya bisa dipakai ulang."""
+    src = next(s for k, s in CELLS if "def iou(box_a" in s)
+    i0 = src.index("import numpy as np")
+    i1 = src.index('print("\u2705 Fungsi metrik siap')
+    return src[i0:i1].rstrip() + "\n"
+
+
+METRIC_BLOCK = None   # diisi di dalam build()
+
+
 def build() -> Path:
+    global METRIC_BLOCK
+    METRIC_BLOCK = _metric_block()
     nb = {
         "cells": [],
         "metadata": {
@@ -1295,6 +1452,16 @@ def build() -> Path:
         "nbformat_minor": 5,
     }
     for kind, src in CELLS:
+        if kind == "code":
+            for _m, _extra in (("# @guard-full\n", METRIC_BLOCK + "\n" + DATA_HELPERS),
+                               ("# @guard-metrics\n", METRIC_BLOCK),
+                               ("# @guard-data\n", DATA_HELPERS),
+                               ("# @guard-img\n", SAMPLE_HELPERS),
+                               ("# @guard\n", "")):
+                if src.startswith(_m):
+                    src = GUARD + "\n" + (_extra + "\n" if _extra else "") \
+                        + src.split(_m, 1)[1]
+                    break
         lines = src.split("\n")
         src_lines = [l + "\n" for l in lines[:-1]] + ([lines[-1]] if lines[-1] else [])
         if kind == "markdown":
